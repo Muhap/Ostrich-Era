@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Welcome To Eggs Section</h1>
+<h5>Where You Can Manage Eggs In The Farm</h5>
+<br>
+<!-- Add links to other pages -->
+<div class="mt-4">
+    <a href="{% url 'add_egg' %}" class="btn btn-primary">Add New Egg</a>
+    <br><br>
+    <a href="{% url 'search_egg' %}" class="btn btn-primary">Search For Egg</a>
+    <br><br>
+    <a href="{% url 'egg_list' %}" class="btn btn-primary">Egg List</a>
+    <br><br>
+    <a href="{% url 'create_batch' %}" class="btn btn-primary">Create a new Egg Batch</a>
+    <br><br>
+    <a href="{% url 'batch_list' %}" class="btn btn-primary">Egg Batch List</a>
+    
+</div>
+
+<!-- List of batches with First Check buttons -->
+
+<br><br><br>
+<h3>Batches Ready for First Check</h3>
+<ul>
+    {% for batch in batches %}
+    <li>
+        <strong>Batch Code:</strong> {{ batch.batch_code }} | 
+        <strong>Status:</strong> {{ batch.status }}
+        <form action="{% url 'first_check' batch.id %}" method="get">
+            <button type="submit" class="btn btn-primary">First Check</button>
+        </form>
+    </li>
+    {% empty %}
+    <li>No batches available for first check.</li>
+    {% endfor %}
+</ul>
+<br><br><br><br>
+{% endblock %}

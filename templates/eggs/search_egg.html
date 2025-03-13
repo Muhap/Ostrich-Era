@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Search Egg by Unique Code</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="egg_code">Egg Code:</label>
+        <input type="text" id="egg_code" name="egg_code" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+{% if error_message %}
+<p>{{ error_message }}</p>
+{% endif %}
+{% endblock %}

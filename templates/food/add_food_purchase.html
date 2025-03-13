@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add Food Purchase</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="purchase_date">Purchase Date:</label>
+        {{ form.purchase_date }}
+    </div>
+    <div class="mb-3">
+        <label for="quantity_kg">Quantity (kg):</label>
+        {{ form.quantity_kg }}
+    </div>
+    <div class="mb-3">
+        <label for="price_per_kg">Price per kg:</label>
+        {{ form.price_per_kg }}
+    </div>
+    <button type="submit" class="btn btn-primary">Add Purchase</button>
+</form>
+{% endblock %}

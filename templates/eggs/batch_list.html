@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Batch List</h2>
+<p>Displaying {{ page_batches.start_index }} - {{ page_batches.end_index }} of {{ page_batches.paginator.count }} batches.</p>
+
+<!-- Table to display batches -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Batch Code</th>
+            <th>Creation Date</th>
+            <th>First Check Date</th>
+            <th>Finish Date</th>
+            <th>Status</th>
+            <th>Eggs in Batch</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for batch in page_batches %}
+        <tr>
+            <td>{{ batch.batch_code }}</td>
+            <td>{{ batch.creation_date|date:"Y-m-d H:i" }}</td>
+            <td>{{ batch.first_check_date|date:"Y-m-d H:i" }}</td>
+            <td>{{ batch.finish_date|date:"Y-m-d H:i" }}</td>
+            <td>{{ batch.status }}</td>
+            <td>{{ batch.number_of_eggs }}</td>
+            <td>
+                <a href="{% url 'first_check' batch.id %}" class="btn btn-primary btn-sm">First Check</a>
+                <a href="{% url 'batch_detail' batch.id %}" class="btn btn-secondary btn-sm">Details</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">No batches available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_batches.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_batches.previous_page_number }}">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">&laquo; First</a>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+        </li>
+        {% endif %}
+
+        <!-- Current Page Indicator -->
+        <li class="page-item active" aria-current="page">
+            <span class="page-link">{{ page_batches.number }}</span>
+        </li>
+
+        {% if page_batches.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_batches.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_batches.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Next</a>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Last &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}

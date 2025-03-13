@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add New Family</h2>
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="family_name" class="form-label">Family Name:</label>
+        <input type="text" id="family_name" name="family_name" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="pitch" class="form-label">Select Pitch:</label>
+        <select id="pitch" name="pitch" class="form-select" required>
+            <option value="" disabled selected>Select a Pitch</option>
+            {% for pitch in pitches %}
+            <option value="{{ pitch.id }}">{{ pitch.pitch_number }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Family</button>
+</form>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Batch Details</h2>
+
+<!-- Display batch details -->
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Batch Code: {{ batch.batch_code }}</h5>
+        <p><strong>Creation Date:</strong> {{ batch.creation_date|date:"Y-m-d H:i" }}</p>
+        <p><strong>First Check Date:</strong> {{ batch.first_check_date|date:"Y-m-d H:i" }}</p>
+        <p><strong>Finish Date:</strong> {{ batch.finish_date|date:"Y-m-d H:i" }}</p>
+        <p><strong>Status:</strong> {{ batch.status }}</p>
+        <p><strong>Eggs in Batch:</strong> {{ batch.number_of_eggs }}</p>
+    </div>
+</div>
+<br><br>
+<!-- Display eggs in the batch -->
+<h3>Eggs in This Batch</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Egg Code</th>
+            <th>Lay Date & Time</th>
+            <th>Mother</th>
+            <th>Father</th>
+            <th>Fertile</th>
+            <th>Weight (g)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for egg in batch.eggs.all %}
+        <tr>
+            <td><a href="{% url 'egg_detail' egg.egg_code %}">{{ egg.egg_code }}</a></td>
+            <td>{{ egg.lay_date_time|date:"Y-m-d H:i" }}</td>
+            <td>{{ egg.mother.name|default:"N/A" }}</td>
+            <td>{{ egg.father.name|default:"N/A" }}</td>
+            <td>{{ egg.fertile }}</td>
+            <td>{{ egg.weight|default:"N/A" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">No eggs in this batch.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add a back link -->
+<div class="mt-4">
+    <a href="{% url 'batch_list' %}" class="btn btn-secondary">Back to Batch List</a>
+</div>
+{% endblock %}

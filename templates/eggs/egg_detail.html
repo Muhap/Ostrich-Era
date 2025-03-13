@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Egg Details</h2>
+
+<!-- Display egg details -->
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Egg Code: {{ egg.egg_code }}</h5>
+        <p><strong>Lay Date & Time:</strong> {{ egg.lay_date_time|date:"Y-m-d H:i" }}</p>
+        <p><strong>Mother:</strong> {{ egg.mother.name|default:"N/A" }}</p>
+        <p><strong>Father:</strong> {{ egg.father.name|default:"N/A" }}</p>
+        <p><strong>Fertile:</strong> {{ egg.fertile }}</p>
+        <p><strong>Weight (g):</strong> {{ egg.weight|default:"N/A" }}</p>
+        <p><strong>Batch:</strong> 
+            {% if egg.batch %}
+                {{ egg.batch.batch_code }}
+            {% else %}
+                Not in a batch
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- Add a back link -->
+<div class="mt-4">
+    <a href="{% url 'egg_list' %}" class="btn btn-secondary">Back to Egg List</a>
+</div>
+{% endblock %}
