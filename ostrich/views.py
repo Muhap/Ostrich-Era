@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Pitch, Family, Ostrich, Batch, Egg, FoodPurchase, FoodInventory
-from .forms import EggForm , FoodPurchaseForm
+from .models import Pitch, Family, Ostrich, Batch, Egg, FoodPurchase, FoodInventory, Chick
+from .forms import EggForm , FoodPurchaseForm, ChickFromEggForm, ChickFromOutsideForm
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 def home(request):
     return render(request, 'home.html')
@@ -158,6 +159,7 @@ def add_food_purchase(request):
     return render(request, 'food/add_food_purchase.html', {'form': form})
 
 def food_inventory(request):
+
     # Ensure the FoodInventory object exists
     FoodInventory.objects.get_or_create(id=1, defaults={'current_inventory': 0})
 
@@ -180,3 +182,50 @@ def food_inventory(request):
         'finish_date': finish_date,
     }
     return render(request, 'food/food_inventory.html', context)
+
+def add_chick_from_egg(request, egg_id):
+    egg = get_object_or_404(Egg, id=egg_id, fertile='Fertile')
+
+    if request.method == 'POST':
+        form = ChickFromEggForm(request.POST)
+        if form.is_valid():
+            chick = form.save(commit=False)
+            # chick.pitch = egg.family.pitch  # Assign the same pitch as the egg's family
+            chick.save()
+
+            # Mark the egg as used
+            egg.fertile = 'Hatched'
+            egg.save()
+
+            return redirect('chick_list')
+    else:
+        form = ChickFromEggForm(initial={'name': f"{egg.egg_code} Chick"})  # Pre-fill the name
+
+    return render(request, 'chicks/add_chick_from_egg.html', {'form': form, 'egg': egg})
+
+def add_chick_outside(request):
+    if request.method == 'POST':
+        form = ChickFromOutsideForm(request.POST)
+        if form.is_valid():
+            chick = form.save(commit=False)
+            chick.creation_date = timezone.now().date()  # Set creation date to today
+            chick.save()
+            return redirect('chick_list')
+    else:
+        form = ChickFromOutsideForm()
+
+    return render(request, 'chicks/add_chick_outside.html', {'form': form})
+
+def chick_list(request):
+
+    chicks = Chick.objects.all().order_by('-creation_date')
+
+    paginator = Paginator(chicks, 20)  # Show 20 chicks per page
+    page_number = request.GET.get('page')
+    page_chicks = paginator.get_page(page_number)
+
+    return render(request, 'chicks/chick_list.html', {'page_chicks': page_chicks})
+
+def select_egg_for_chick(request):
+    fertile_eggs = Egg.objects.filter(fertile='Fertile')
+    return render(request, 'chicks/select_egg_for_chick.html', {'fertile_eggs': fertile_eggs})

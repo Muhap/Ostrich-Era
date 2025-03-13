@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Select an Egg to Hatch into a Chick</h2>
+<ul>
+    {% for egg in fertile_eggs %}
+    <li>
+        <a href="{% url 'add_chick_from_egg' egg_id=egg.id %}">{{ egg.egg_code }}</a>
+    </li>
+    {% empty %}
+    <li>No fertile eggs available.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

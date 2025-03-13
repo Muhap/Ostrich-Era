@@ -61,11 +61,12 @@
                             Chicks
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="chicksDropdown">
-                            <li><a class="dropdown-item" href="#">Add Chick</a></li>
-                            <li><a class="dropdown-item" href="#">Chick List</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_chick_outside' %}">Add New Chick </a></li>
+                            <li><a class="dropdown-item" href="{% url 'select_egg_for_chick' %}">Select Egg For Chick </a></li>
+                            <li><a class="dropdown-item" href="{% url 'chick_list' %}">Chick List</a></li>
                         </ul>
                     </li>
-
+                    
                     <!-- Food Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="foodDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add Chick from Egg: {{ egg.egg_code }}</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_name">Name:</label>
+        {{ form.name }}
+    </div>
+    <div class="mb-3">
+        <label for="id_gender">Gender:</label>
+        {{ form.gender }}
+    </div>
+    <div class="mb-3">
+        <label for="id_pitch">Pitch:</label>
+        {{ form.pitch }}
+    </div>
+    <button type="submit" class="btn btn-primary">Add Chick</button>
+</form>
+{% endblock %}

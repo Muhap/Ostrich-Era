@@ -3,6 +3,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
 from decimal import Decimal
+import math
+from django.db.models import Sum
 
 class Pitch(models.Model):
     pitch_number = models.IntegerField(unique=True)
@@ -105,10 +107,6 @@ class Batch(models.Model):
     def __str__(self):
         return self.batch_code
     
-import math
-from django.db import models
-from django.utils import timezone
-from django.db.models import Sum
 
 class FoodPurchase(models.Model):
     purchase_date = models.DateField(default=timezone.now)
@@ -132,8 +130,11 @@ class FoodInventory(models.Model):
     def update_inventory():
         # Calculate the total food inventory from all purchases
         total_inventory = FoodPurchase.total_inventory()
+
+        # Calculate daily consumption
         ostrich_count = Ostrich.objects.count()
-        daily_consumption = ostrich_count * 2  # 2 kg per ostrich per day
+        adult_chick_count = Chick.total_adult_chicks()  # Use the updated method
+        daily_consumption = (ostrich_count + adult_chick_count) * 2  # 2 kg per ostrich/chick per day
 
         try:
             # Try to get the existing FoodInventory object
@@ -145,24 +146,22 @@ class FoodInventory(models.Model):
             days_since_last_update = 0
 
         # Ensure days_since_last_update is an integer
-        days_since_last_update = max(days_since_last_update, 0)  # Prevent negative days
-
-        # Convert daily consumption to Decimal for precise calculations
-        total_daily_consumption = Decimal(daily_consumption) * days_since_last_update
+        days_since_last_update = max(days_since_last_update, 0)
 
         # Update the current inventory
-        current_inventory = max(total_inventory - total_daily_consumption, 0)
+        total_daily_consumption = Decimal(daily_consumption) * days_since_last_update
+        current_inventory = max(Decimal(total_inventory or 0) - total_daily_consumption, 0)
         food_inventory.current_inventory = current_inventory
         food_inventory.save()
 
     @staticmethod
-    @staticmethod
-    def estimated_finish_date():
+    def estimated_finish_date():        # Estimate when the food will run out
         ostrich_count = Ostrich.objects.count()
-        if ostrich_count == 0:
-            return "No ostriches in the farm."
+        adult_chick_count = Chick.total_adult_chicks()  # Use the updated method
+        if ostrich_count + adult_chick_count == 0:
+            return "No ostriches or chicks in the farm."
 
-        daily_consumption = ostrich_count * 2  # 2 kg per ostrich per day
+        daily_consumption = (ostrich_count + adult_chick_count) * 2  # 2 kg per ostrich/chick per day
         try:
             food_inventory = FoodInventory.objects.get(id=1)
             current_inventory = food_inventory.current_inventory
@@ -170,9 +169,61 @@ class FoodInventory(models.Model):
             current_inventory = 0
 
         if daily_consumption == 0 or current_inventory == 0:
-            return "No ostriches or no food available."
+            return "No ostriches or chicks or no food available."
 
         # Calculate days left as an integer
-        days_left = math.ceil(current_inventory / daily_consumption)  # Round up to ensure food lasts until the end of the day
+        days_left = math.ceil(Decimal(current_inventory) / Decimal(daily_consumption))
         finish_date = timezone.now().date() + timezone.timedelta(days=days_left)
         return finish_date
+
+class Chick(models.Model):
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female')
+    ]
+
+    name = models.CharField(max_length=100)
+    creation_date = models.DateField(default=timezone.now)  # Date when the chick was created
+    initial_age_in_months = models.PositiveIntegerField(null=True, blank=True)  # Optional for externally purchased chicks
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    pitch = models.ForeignKey('Pitch', on_delete=models.PROTECT, related_name='chicks', null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def age_in_months(self):
+        """Calculate the chick's age in months."""
+        if self.initial_age_in_months is not None:
+            # Use the initial age for externally purchased chicks
+            return self.initial_age_in_months + self._calculate_dynamic_age()
+        else:
+            # Dynamically calculate age for chicks hatched from eggs
+            return self._calculate_dynamic_age()
+
+    def _calculate_dynamic_age(self):
+        """Helper method to calculate dynamic age."""
+        if not self.creation_date:
+            return 0
+
+        today = timezone.now().date()
+        age_days = (today - self.creation_date).days
+        return age_days // 30  # Approximate months (30 days per month)
+
+    @property
+    def eats_like_adult(self):
+        """Check if the chick eats like an adult ostrich."""
+        return self.age_in_months >= 2
+
+    def total_adult_chicks():
+        """Return the number of chicks that eat like adults."""
+        today = timezone.now().date()
+        two_months_ago = today - timezone.timedelta(days=60)
+
+        # Filter chicks created more than 2 months ago or with initial_age_in_months >= 2
+        adult_chicks = Chick.objects.filter(
+            models.Q(creation_date__lte=two_months_ago, initial_age_in_months__isnull=True) |  # Chicks hatched from eggs
+            models.Q(initial_age_in_months__gte=2)  # Externally purchased chicks
+        )
+        return adult_chicks.count()
+    

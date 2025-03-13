@@ -23,4 +23,8 @@ urlpatterns = [
     path('batch-detail/<int:batch_id>/', views.batch_detail, name='batch_detail'),
     path('add-food-purchase/', views.add_food_purchase, name='add_food_purchase'),
     path('food-inventory/', views.food_inventory, name='food_inventory'),
+    path('add-chick-from-egg/<int:egg_id>/', views.add_chick_from_egg, name='add_chick_from_egg'),
+    path('add-chick-outside/', views.add_chick_outside, name='add_chick_outside'),
+    path('chick-list/', views.chick_list, name='chick_list'),
+    path('select-egg-for-chick/', views.select_egg_for_chick, name='select_egg_for_chick'),
 ]
