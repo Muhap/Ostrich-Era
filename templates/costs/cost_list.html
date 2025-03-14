@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load humanize %} <!-- For intcomma formatting -->
+
+{% block content %}
+<h2>Cost List</h2>
+
+<!-- Display Total Cost -->
+<div class="alert alert-info">
+    <strong>Total Cost:</strong> {{ total_cost|floatformat:2|intcomma }} $
+</div>
+
+<!-- Display Category Totals -->
+<h3>Cost Breakdown by Category</h3>
+<ul class="list-group">
+    {% for category_total in category_totals %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <strong>{{ category_total.category_name }}</strong>
+        <span class="badge bg-primary rounded-pill">{{ category_total.total|floatformat:2|intcomma }} $</span>
+    </li>
+    {% endfor %}
+</ul>
+
+<!-- Category Filters -->
+<form method="get" class="mt-4">
+    <div class="mb-3">
+        <label>Filter by Categories:</label><br>
+        {% for category in categories %}
+        <input type="checkbox" name="categories" value="{{ category.id }}"
+               {% if category.id in selected_categories %}checked{% endif %}>
+        <label>{{ category.name }}</label><br>
+        {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+<!-- Cost Table -->
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Price ($)</th>
+            <th>Category</th>
+            <th>Date Paid</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cost in page_costs %}
+        <tr>
+            <td>{{ cost.name }}</td>
+            <td>{{ cost.price|floatformat:2|intcomma }}</td>
+            <td>{{ cost.category.name }}</td>
+            <td>{{ cost.date_paid|date:"Y-m-d" }}</td>
+            <td>{{ cost.notes|default:"N/A" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No costs available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<nav aria-label="Page navigation" class="mt-4">
+    <!-- ... existing pagination code ... -->
+</nav>
+{% endblock %}

@@ -78,6 +78,38 @@
                         </ul>
                     </li>
 
+                    <!-- costs Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="costsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Costs
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="costsDropdown">
+                            <li><a class="dropdown-item" href="{% url 'add_farm_setting_cost' %}">Farm Setting Costs</a></li>
+                            <li><a class="dropdown-item" href="{% url 'food_costs' %}">Food Costs</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_medical_cost' %}">Medical Costs</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_rent_tax_cost' %}">Rent and Taxes</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_electricity_water_cost' %}">Electricity and Water</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_salary_cost' %}">Salaries</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_other_cost' %}">Other Costs</a></li>       
+                            <li><a class="dropdown-item" href="{% url 'cost_list' %}">Costs List</a></li>                    
+                            
+                        </ul>
+                    </li>
+
+                    <!-- Profit Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="ProfitDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Profit
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="ProfitDropdown">
+                            <li><a class="dropdown-item" href="#">Unfertile Egg Profit</a></li>  
+                            <li><a class="dropdown-item" href="#">Feathers Profit</a></li> 
+                            <li><a class="dropdown-item" href="#">Chicks Profit</a></li>
+                            <li><a class="dropdown-item" href="#">Ostrich Profit</a></li>
+                            <li><a class="dropdown-item" href="#">Meat Profit</a></li>                        
+                        </ul>
+                    </li>
+
                     <!-- Reports Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -87,6 +119,18 @@
                             <li><a class="dropdown-item" href="#">Egg Production Report</a></li>
                             <li><a class="dropdown-item" href="#">Chick Growth Report</a></li>
                             <li><a class="dropdown-item" href="#">Food Consumption Report</a></li>
+                        </ul>
+                    </li>
+
+
+                    <!-- chat with AI Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="chatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Ostrich-era AI
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="chatDropdown">
+                            <li><a class="dropdown-item" href="#">ask about something </a></li>
+                            <li><a class="dropdown-item" href="#">generate feedback </a></li>
                         </ul>
                     </li>
                 </ul>
@@ -103,7 +147,7 @@
 
     <!-- Footer -->
     <footer class="bg-primary text-white text-center p-3 mt-4">
-        <p>&copy; 2023 Ostrich Farm Management System</p>
+        <p>&copy; 2025 Ostrich Farm Management System</p>
     </footer>
 
     <!-- Add Bootstrap JS and Popper.js -->

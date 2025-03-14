@@ -107,7 +107,6 @@ class Batch(models.Model):
     def __str__(self):
         return self.batch_code
     
-
 class FoodPurchase(models.Model):
     purchase_date = models.DateField(default=timezone.now)
     quantity_kg = models.DecimalField(max_digits=10, decimal_places=2)
@@ -226,4 +225,22 @@ class Chick(models.Model):
             models.Q(initial_age_in_months__gte=2)  # Externally purchased chicks
         )
         return adult_chicks.count()
+
+class CostCategory(models.Model):
+    """Model to store cost categories."""
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Cost(models.Model):
+    """Model to store individual costs."""
+    name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    category = models.ForeignKey(CostCategory, on_delete=models.PROTECT, related_name='costs')
+    date_paid = models.DateField(default=timezone.now, null=True, blank=True)  # For periodic costs
+    notes = models.TextField(blank=True, null=True)  # Optional notes field
+
+    def __str__(self):
+        return f"{self.name} - {self.price} ({self.category})"
     

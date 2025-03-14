@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add Salary Cost</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_name">Employee Name:</label>
+        {{ form.name }}
+    </div>
+    <div class="mb-3">
+        <label for="id_price">Monthly Salary ($):</label>
+        {{ form.price }}
+    </div>
+    <div class="mb-3">
+        <label for="id_date_paid">Date Paid:</label>
+        {{ form.date_paid }}
+    </div>
+    <div class="mb-3">
+        <label for="id_notes">Role:</label>
+        {{ form.notes }}
+    </div>
+    <button type="submit" class="btn btn-primary">Add Cost</button>
+</form>
+{% endblock %}

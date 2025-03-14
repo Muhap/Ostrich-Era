@@ -1,5 +1,5 @@
 from django import forms
-from .models import Egg, Ostrich, FoodPurchase, Chick
+from .models import Egg, Ostrich, FoodPurchase, Chick , CostCategory, Cost
 
 class EggForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -35,3 +35,13 @@ class ChickFromOutsideForm(forms.ModelForm):
         widgets = {
             'initial_age_in_months': forms.NumberInput(attrs={'min': 0}),
         }
+
+class CostForm(forms.ModelForm):
+    class Meta:
+        model = Cost
+        fields = ['name', 'price', 'date_paid', 'notes']  
+        widgets = {
+            'price': forms.NumberInput(attrs={'step': '0.01'}),
+            'date_paid': forms.DateInput(attrs={'type': 'date'}),
+        }
+

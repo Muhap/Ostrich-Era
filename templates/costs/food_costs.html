@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load humanize %} 
+{% block content %}
+<h2>Food Costs</h2>
+<p>Total food cost: {{ total_food_cost|floatformat:2|intcomma }} $</p>
+
+<!-- Add link to add food purchase -->
+<div class="mt-4">
+    <a href="{% url 'add_food_purchase' %}" class="btn btn-primary">Add Food Purchase</a>
+</div>
+{% endblock %}

@@ -27,4 +27,12 @@ urlpatterns = [
     path('add-chick-outside/', views.add_chick_outside, name='add_chick_outside'),
     path('chick-list/', views.chick_list, name='chick_list'),
     path('select-egg-for-chick/', views.select_egg_for_chick, name='select_egg_for_chick'),
+    path('add-farm-setting-cost/', views.add_farm_setting_cost, name='add_farm_setting_cost'),
+    path('food-costs/', views.food_costs, name='food_costs'),
+    path('add-medical-cost/', views.add_medical_cost, name='add_medical_cost'),
+    path('add-rent-tax-cost/', views.add_rent_tax_cost, name='add_rent_tax_cost'),
+    path('add-electricity-water-cost/', views.add_electricity_water_cost, name='add_electricity_water_cost'),
+    path('add-salary-cost/', views.add_salary_cost, name='add_salary_cost'),
+    path('add-other-cost/', views.add_other_cost, name='add_other_cost'),
+    path('cost-list/', views.cost_list, name='cost_list'),
 ]

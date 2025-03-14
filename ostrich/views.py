@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Pitch, Family, Ostrich, Batch, Egg, FoodPurchase, FoodInventory, Chick
-from .forms import EggForm , FoodPurchaseForm, ChickFromEggForm, ChickFromOutsideForm
+from .models import Pitch, Family, Ostrich, Batch, Egg, FoodPurchase, FoodInventory, Chick, CostCategory, Cost
+from .forms import EggForm , FoodPurchaseForm, ChickFromEggForm, ChickFromOutsideForm, CostForm
 from django.core.paginator import Paginator
 from django.utils import timezone
+from django.db.models import Sum, F
 
 def home(request):
     return render(request, 'home.html')
@@ -227,5 +228,153 @@ def chick_list(request):
     return render(request, 'chicks/chick_list.html', {'page_chicks': page_chicks})
 
 def select_egg_for_chick(request):
+
     fertile_eggs = Egg.objects.filter(fertile='Fertile')
     return render(request, 'chicks/select_egg_for_chick.html', {'fertile_eggs': fertile_eggs})
+
+def add_farm_setting_cost(request):
+    # Ensure "Farm Setting Costs" category exists
+    farm_setting_category, _ = CostCategory.objects.get_or_create(name="Farm Setting Costs")
+
+    if request.method == 'POST':
+        form = CostForm(request.POST)
+        if form.is_valid():  # Check if the form is valid
+            cost = form.save(commit=False)
+            cost.category = farm_setting_category  # Assign the correct category
+            cost.save()  # Save the cost to the database
+            return redirect('cost_list')  # Redirect to the cost list page
+        else:
+            print(form.errors)  # Print form errors for debugging
+    else:
+        form = CostForm(initial={'category': farm_setting_category})
+
+    return render(request, 'costs/add_farm_setting_cost.html', {'form': form})
+
+def food_costs(request):
+    # Calculate the total food cost
+    total_food_cost = FoodPurchase.objects.aggregate(total=Sum(F('quantity_kg') * F('price_per_kg')))['total'] or 0
+
+    context = {
+        'total_food_cost': total_food_cost,
+    }
+    return render(request, 'costs/food_costs.html', context)
+
+def add_medical_cost(request):
+    # Ensure "Medical Costs" category exists
+    medical_category, _ = CostCategory.objects.get_or_create(name="Medical Costs")
+
+    if request.method == 'POST':
+        form = CostForm(request.POST)
+        if form.is_valid():
+            cost = form.save(commit=False)
+            cost.category = medical_category  # Assign the correct category
+            cost.save()
+            return redirect('cost_list')
+        else:
+            print(form.errors)  # Debug: Print form errors
+    else:
+        form = CostForm(initial={'category': medical_category})
+
+    return render(request, 'costs/add_medical_cost.html', {'form': form})
+
+def add_rent_tax_cost(request):
+    # Ensure "Rent, Taxes" category exists
+    rent_tax_category, _ = CostCategory.objects.get_or_create(name="Rent, Taxes")
+    if request.method == 'POST':
+        form = CostForm(request.POST)
+        if form.is_valid():
+            cost = form.save(commit=False)
+            cost.category = rent_tax_category  # Assign the correct category
+            cost.save()
+            return redirect('cost_list')
+        else:
+            print(form.errors)  # Debug: Print form errors
+    else:
+        form = CostForm(initial={'category': rent_tax_category})
+    return render(request, 'costs/add_rent_tax_cost.html', {'form': form})
+
+def add_electricity_water_cost(request):
+    # Ensure "Electricity and Water" category exists
+    ew_category, _ = CostCategory.objects.get_or_create(name="Electricity and Water")
+    if request.method == 'POST':
+        form = CostForm(request.POST)
+        if form.is_valid():
+            cost = form.save(commit=False)
+            cost.category = ew_category  # Assign the correct category
+            cost.save()
+            return redirect('cost_list')
+        else:
+            print(form.errors)  # Debug: Print form errors
+    else:
+        form = CostForm(initial={'category': ew_category})
+    return render(request, 'costs/add_electricity_water_cost.html', {'form': form})
+
+def add_salary_cost(request):
+    # Ensure "Salaries" category exists
+    salary_category, _ = CostCategory.objects.get_or_create(name="Salaries")
+    if request.method == 'POST':
+        form = CostForm(request.POST)
+        if form.is_valid():
+            cost = form.save(commit=False)
+            cost.category = salary_category  # Assign the correct category
+            cost.save()
+            return redirect('cost_list')
+        else:
+            print(form.errors)  # Debug: Print form errors
+    else:
+        form = CostForm(initial={'category': salary_category})
+    return render(request, 'costs/add_salary_cost.html', {'form': form})
+
+def add_other_cost(request):
+    # Ensure "Other Costs" category exists
+    other_category, _ = CostCategory.objects.get_or_create(name="Other Costs")
+    if request.method == 'POST':
+        form = CostForm(request.POST)
+        if form.is_valid():
+            cost = form.save(commit=False)
+            cost.category = other_category  # Assign the correct category
+            cost.save()
+            return redirect('cost_list')
+        else:
+            print(form.errors)  # Debug: Print form errors
+    else:
+        form = CostForm(initial={'category': other_category})
+    return render(request, 'costs/add_other_cost.html', {'form': form})
+
+def cost_list(request):
+    # Get all costs
+    costs = Cost.objects.all().order_by('-date_paid')
+
+    # Filter by categories if selected
+    selected_categories = request.GET.getlist('categories')
+    if selected_categories:
+        costs = costs.filter(category__id__in=selected_categories)
+
+    # Calculate the total cost for the filtered results
+    total_cost = costs.aggregate(total=Sum('price'))['total'] or 0
+
+    # Calculate total costs for all categories
+    category_totals = []
+    for category in CostCategory.objects.all():
+        total = category.costs.aggregate(total=Sum('price'))['total'] or 0
+        category_totals.append({
+            'category_name': category.name,
+            'total': total,
+        })
+
+    # Paginate the results
+    paginator = Paginator(costs, 20)  # Show 20 costs per page
+    page_number = request.GET.get('page')
+    page_costs = paginator.get_page(page_number)
+
+    # Get all cost categories for filtering
+    categories = CostCategory.objects.all()
+
+    context = {
+        'page_costs': page_costs,
+        'categories': categories,
+        'selected_categories': selected_categories,
+        'total_cost': total_cost,
+        'category_totals': category_totals,  # Pass the category totals to the template
+    }
+    return render(request, 'costs/cost_list.html', context)
