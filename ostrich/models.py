@@ -32,15 +32,28 @@ class Ostrich(models.Model):
         ('male','male'),
         ('female','female')
     )
+
+    existance_choices = (
+        ('exists','exists'),
+        ('sold', 'sold'),
+        ('slaughtered','Slaughtered')
+    )
     family = models.ForeignKey(Family, on_delete=models.CASCADE, related_name='ostriches')
     name = models.CharField(max_length=100)
     age = models.IntegerField(blank=True, null=True)
     gender = models.CharField(max_length= 100, choices = gender_choices, null=True)
+    status = models.CharField(max_length= 100, default="exists",choices = existance_choices, null=True)
+
 
     def __str__(self):
         return self.name
 
 class Egg(models.Model):
+
+    sale_choices = (
+        ('exists','exists'),
+        ('sold','sold')        
+    )
     egg_code = models.CharField(max_length=50, unique=True)
     lay_date_time = models.DateTimeField(default=timezone.now)
     mother = models.ForeignKey('Ostrich', on_delete=models.PROTECT, related_name='eggs_laid', null=True, blank=True)
@@ -56,6 +69,7 @@ class Egg(models.Model):
     )
     weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     batch = models.ForeignKey('Batch', on_delete=models.SET_NULL, null=True, blank=True, related_name='eggs')
+    status = models.CharField(max_length= 100, default="exists",choices = sale_choices, null=True)
 
     def __str__(self):
         return self.egg_code
@@ -107,6 +121,63 @@ class Batch(models.Model):
     def __str__(self):
         return self.batch_code
     
+
+class Chick(models.Model):
+
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female')
+    ]
+    sale_choices = (
+        ('exists','exists'),
+        ('sold','sold'),
+    )
+    name = models.CharField(max_length=100)
+    creation_date = models.DateField(default=timezone.now)  # Date when the chick was created
+    initial_age_in_months = models.PositiveIntegerField(null=True, blank=True)  # Optional for externally purchased chicks
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    pitch = models.ForeignKey('Pitch', on_delete=models.PROTECT, related_name='chicks', null=True, blank=True)
+    status = models.CharField(max_length= 100,default="exists", choices = sale_choices, null=True)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def age_in_months(self):
+        """Calculate the chick's age in months."""
+        if self.initial_age_in_months is not None:
+            # Use the initial age for externally purchased chicks
+            return self.initial_age_in_months + self._calculate_dynamic_age()
+        else:
+            # Dynamically calculate age for chicks hatched from eggs
+            return self._calculate_dynamic_age()
+
+    def _calculate_dynamic_age(self):
+        """Helper method to calculate dynamic age."""
+        if not self.creation_date:
+            return 0
+
+        today = timezone.now().date()
+        age_days = (today - self.creation_date).days
+        return age_days // 30  # Approximate months (30 days per month)
+
+    @property
+    def eats_like_adult(self):
+        """Check if the chick eats like an adult ostrich."""
+        return self.age_in_months >= 2
+
+    def total_adult_chicks():
+        """Return the number of chicks that eat like adults."""
+        today = timezone.now().date()
+        two_months_ago = today - timezone.timedelta(days=60)
+
+        # Filter chicks created more than 2 months ago or with initial_age_in_months >= 2
+        adult_chicks = Chick.objects.filter(
+            models.Q(creation_date__lte=two_months_ago, initial_age_in_months__isnull=True) |  # Chicks hatched from eggs
+            models.Q(initial_age_in_months__gte=2)  # Externally purchased chicks
+        )
+        return adult_chicks.count()
+
 class FoodPurchase(models.Model):
     purchase_date = models.DateField(default=timezone.now)
     quantity_kg = models.DecimalField(max_digits=10, decimal_places=2)
@@ -127,12 +198,13 @@ class FoodInventory(models.Model):
 
     @staticmethod
     def update_inventory():
-        # Calculate the total food inventory from all purchases
+        # Calculate total food inventory from purchases
         total_inventory = FoodPurchase.total_inventory()
 
         # Calculate daily consumption
         ostrich_count = Ostrich.objects.count()
-        adult_chick_count = Chick.total_adult_chicks()  # Use the updated method
+        adult_chick_count = sum(1 for chick in Chick.objects.all() if chick.eats_like_adult)
+
         daily_consumption = (ostrich_count + adult_chick_count) * 2  # 2 kg per ostrich/chick per day
 
         try:
@@ -174,57 +246,6 @@ class FoodInventory(models.Model):
         days_left = math.ceil(Decimal(current_inventory) / Decimal(daily_consumption))
         finish_date = timezone.now().date() + timezone.timedelta(days=days_left)
         return finish_date
-
-class Chick(models.Model):
-    GENDER_CHOICES = [
-        ('male', 'Male'),
-        ('female', 'Female')
-    ]
-
-    name = models.CharField(max_length=100)
-    creation_date = models.DateField(default=timezone.now)  # Date when the chick was created
-    initial_age_in_months = models.PositiveIntegerField(null=True, blank=True)  # Optional for externally purchased chicks
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    pitch = models.ForeignKey('Pitch', on_delete=models.PROTECT, related_name='chicks', null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def age_in_months(self):
-        """Calculate the chick's age in months."""
-        if self.initial_age_in_months is not None:
-            # Use the initial age for externally purchased chicks
-            return self.initial_age_in_months + self._calculate_dynamic_age()
-        else:
-            # Dynamically calculate age for chicks hatched from eggs
-            return self._calculate_dynamic_age()
-
-    def _calculate_dynamic_age(self):
-        """Helper method to calculate dynamic age."""
-        if not self.creation_date:
-            return 0
-
-        today = timezone.now().date()
-        age_days = (today - self.creation_date).days
-        return age_days // 30  # Approximate months (30 days per month)
-
-    @property
-    def eats_like_adult(self):
-        """Check if the chick eats like an adult ostrich."""
-        return self.age_in_months >= 2
-
-    def total_adult_chicks():
-        """Return the number of chicks that eat like adults."""
-        today = timezone.now().date()
-        two_months_ago = today - timezone.timedelta(days=60)
-
-        # Filter chicks created more than 2 months ago or with initial_age_in_months >= 2
-        adult_chicks = Chick.objects.filter(
-            models.Q(creation_date__lte=two_months_ago, initial_age_in_months__isnull=True) |  # Chicks hatched from eggs
-            models.Q(initial_age_in_months__gte=2)  # Externally purchased chicks
-        )
-        return adult_chicks.count()
 
 class CostCategory(models.Model):
     """Model to store cost categories."""

@@ -21,6 +21,17 @@
         <h2>Track Na3am</h2>
     </header>
 
+    {% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
@@ -102,14 +113,14 @@
                             Profit
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="ProfitDropdown">
-                            <li><a class="dropdown-item" href="#">Unfertile Egg Profit</a></li>  
-                            <li><a class="dropdown-item" href="#">Feathers Profit</a></li> 
-                            <li><a class="dropdown-item" href="#">Chicks Profit</a></li>
+                            <li><a class="dropdown-item" href="#">Unfertile Egg Profit</a></li>
+                            <li><a class="dropdown-item" href="#">Feather Profit</a></li>
+                            <li><a class="dropdown-item" href="#">Chick Profit</a></li>
                             <li><a class="dropdown-item" href="#">Ostrich Profit</a></li>
-                            <li><a class="dropdown-item" href="#">Meat Profit</a></li>                        
+                            <li><a class="dropdown-item" href="#">Meat Profit</a></li>
+                            <li><a class="dropdown-item" href="#">Profit List</a></li>                      
                         </ul>
                     </li>
-
                     <!-- Reports Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -121,8 +132,6 @@
                             <li><a class="dropdown-item" href="#">Food Consumption Report</a></li>
                         </ul>
                     </li>
-
-
                     <!-- chat with AI Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="chatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

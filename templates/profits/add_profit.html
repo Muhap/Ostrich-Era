@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Add {{ category_name }} Profit</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_name">Name:</label>
+        {{ form.name }}
+    </div>
+    <div class="mb-3">
+        <label for="id_amount">Amount ($):</label>
+        {{ form.amount }}
+    </div>
+    <div class="mb-3">
+        <label for="id_date_earned">Date Earned:</label>
+        {{ form.date_earned }}
+    </div>
+    <div class="mb-3">
+        <label for="id_notes">Notes:</label>
+        {{ form.notes }}
+    </div>
+    <button type="submit" class="btn btn-primary">Add Profit</button>
+</form>
+{% endblock %}

@@ -17,11 +17,10 @@ def eggs(request):
 def chicks(request):
     return render(request, 'chicks.html')
 
-def food(request):
-    return render(request, 'food.html')
-
 def extract_report(request):
     return render(request, 'extract_report.html')
+
+
 
 def add_pitch(request):
     if request.method == 'POST':
@@ -51,6 +50,9 @@ def add_ostrich(request):
         Ostrich.objects.create(name=name, age=age, gender=gender, family=family)
         return redirect('farm_settings')
     return render(request, 'farm_settings/add_ostrich.html', {'families': families})
+
+
+
 
 def add_egg(request):
     if request.method == 'POST':
@@ -143,41 +145,60 @@ def batch_detail(request, batch_id):
 
     return render(request, 'eggs/batch_detail.html', {'batch': batch})
 
+
+
+
+def food(request):
+    return render(request, 'food.html')
+
+def food_costs(request):
+    # Calculate the total food cost
+    total_food_cost = FoodPurchase.objects.aggregate(total=Sum(F('quantity_kg') * F('price_per_kg')))['total'] or 0
+    context = {
+        'total_food_cost': total_food_cost,
+    }
+    return render(request, 'costs/food_costs.html', context)
+
+
 def add_food_purchase(request):
     if request.method == 'POST':
         form = FoodPurchaseForm(request.POST)
         if form.is_valid():
-            form.save()
+            food_purchase = form.save()  # Save the food purchase
+
+            # Create a corresponding Cost entry
+            food_cost_category, _ = CostCategory.objects.get_or_create(name="Food Costs")
+            Cost.objects.create(
+                name=f"Food Purchase - {food_purchase.purchase_date}",
+                price=food_purchase.quantity_kg * food_purchase.price_per_kg,
+                category=food_cost_category,
+                date_paid=food_purchase.purchase_date,
+                notes=f"Food purchase of {food_purchase.quantity_kg} kg at ${food_purchase.price_per_kg}/kg",
+            )
+
             # Update the food inventory after adding a purchase
             try:
                 FoodInventory.update_inventory()
             except Exception as e:
                 print(f"Error updating inventory: {e}")
+
             return redirect('food_inventory')
     else:
         form = FoodPurchaseForm()
 
     return render(request, 'food/add_food_purchase.html', {'form': form})
-
 def food_inventory(request):
-
-    # Ensure the FoodInventory object exists
     FoodInventory.objects.get_or_create(id=1, defaults={'current_inventory': 0})
-
-    # Update the food inventory
     try:
         FoodInventory.update_inventory()
     except Exception as e:
         print(f"Error updating inventory: {e}")
-
-    # Get the current inventory and estimated finish date
     try:
         current_inventory = FoodInventory.objects.get(id=1).current_inventory
         finish_date = FoodInventory.estimated_finish_date()
     except FoodInventory.DoesNotExist:
         current_inventory = 0
         finish_date = "No inventory data available."
-
     context = {
         'current_inventory': current_inventory,
         'finish_date': finish_date,
@@ -249,15 +270,6 @@ def add_farm_setting_cost(request):
         form = CostForm(initial={'category': farm_setting_category})
 
     return render(request, 'costs/add_farm_setting_cost.html', {'form': form})
-
-def food_costs(request):
-    # Calculate the total food cost
-    total_food_cost = FoodPurchase.objects.aggregate(total=Sum(F('quantity_kg') * F('price_per_kg')))['total'] or 0
-
-    context = {
-        'total_food_cost': total_food_cost,
-    }
-    return render(request, 'costs/food_costs.html', context)
 
 def add_medical_cost(request):
     # Ensure "Medical Costs" category exists
@@ -341,6 +353,7 @@ def add_other_cost(request):
         form = CostForm(initial={'category': other_category})
     return render(request, 'costs/add_other_cost.html', {'form': form})
 
+
 def cost_list(request):
     # Get all costs
     costs = Cost.objects.all().order_by('-date_paid')
@@ -375,6 +388,6 @@ def cost_list(request):
         'categories': categories,
         'selected_categories': selected_categories,
         'total_cost': total_cost,
-        'category_totals': category_totals,  # Pass the category totals to the template
+        'category_totals': category_totals,
     }
     return render(request, 'costs/cost_list.html', context)

@@ -22,5 +22,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('ostrich.urls')),
     
+    # Authentication URLs
+    path('accounts/', include('django.contrib.auth.urls')),
+    
     
 ]
