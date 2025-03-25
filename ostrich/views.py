@@ -29,8 +29,6 @@ def chicks(request):
 def extract_report(request):
     return render(request, 'extract_report.html')
 
-
-
 def add_pitch(request):
     if request.method == 'POST':
         pitch_number = request.POST.get('pitch_number')
@@ -75,7 +73,6 @@ def add_family(request):
 
     return render(request, 'farm_settings/add_family.html', {'pitches': pitches})
 
-
 def add_ostrich(request):
     families = Family.objects.all()
 
@@ -85,24 +82,18 @@ def add_ostrich(request):
         gender = request.POST.get('gender')
         family_id = request.POST.get('family')
 
-        # Ensure family exists
         family = get_object_or_404(Family, id=family_id)
 
-        # Check if an ostrich with the same name already exists in the selected family
-        if Ostrich.objects.filter(name=name, family=family).exists():
-            messages.error(request, f"Ostrich '{name}' already exists in Family {family.Family_name}!")
-            return render(request, 'farm_settings/add_ostrich.html', {'families': families})
-
-        # Create ostrich
+        # Create ostrich and save
         Ostrich.objects.create(name=name, age=age, gender=gender, family=family)
-        messages.success(request, f"Ostrich '{name}' added successfully!")
-        return redirect('farm_settings/ostrich_list.html')
+        
+        messages.success(request, "Ostrich added successfully!")
+        return redirect('ostrich_list')  # Ensure 'ostrich_list' is a valid URL name
 
     return render(request, 'farm_settings/add_ostrich.html', {'families': families})
 
 def family_list(request):
-    families = Family.objects.all().order_by('pitch__pitch_number', 'Family_name')
-    
+    families = Family.objects.filter(ostriches__status="exists").distinct().order_by('pitch__pitch_number', 'Family_name')
     paginator = Paginator(families, 10)  # Show 10 families per page
     page_number = request.GET.get('page')
     page_families = paginator.get_page(page_number)
@@ -117,7 +108,6 @@ def ostrich_list(request):
     page_ostriches = paginator.get_page(page_number)
 
     return render(request, 'farm_settings/ostrich_list.html', {'ostriches': page_ostriches})
-
 
 def add_egg(request):
     if request.method == 'POST':
