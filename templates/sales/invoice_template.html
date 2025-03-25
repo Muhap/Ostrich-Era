@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - {{ sale.invoice_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .invoice-container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; }
+        h2 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .total { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <h1>Track Na3am</h1>
+        <h2>Invoice - {{ sale.invoice_number }}</h2>
+        <p><strong>Sale Date:</strong> {{ sale.sale_date }}</p>
+
+        <table>
+            <tr>
+                <th>Ostrich</th>
+                <th>Weight (kg)</th>
+                <th>Price</th>
+            </tr>
+            <tr>
+                <td>{{ sale.ostrich.name }}</td>
+                <td>{{ sale.weight_kg }}</td>
+                <td>${{ sale.price }}</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="total">Total Price</td>
+                <td class="total">${{ sale.price }}</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

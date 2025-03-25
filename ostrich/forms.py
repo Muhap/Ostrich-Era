@@ -45,3 +45,63 @@ class CostForm(forms.ModelForm):
             'date_paid': forms.DateInput(attrs={'type': 'date'}),
         }
 
+from django import forms
+from .models import Sale
+from django.contrib import messages
+
+class SaleForm(forms.ModelForm):
+    class Meta:
+        model = Sale
+        fields = ['category', 'egg', 'chick', 'ostrich', 'quantity', 'price_per_unit', 'sale_date']
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)  # Get request object if passed
+        super().__init__(*args, **kwargs)
+
+        available_eggs = Egg.objects.filter(status='exists')
+        available_chicks = Chick.objects.filter(status='exists')
+        available_ostriches = Ostrich.objects.filter(status='exists')
+
+        self.fields['egg'].queryset = available_eggs
+        self.fields['chick'].queryset = available_chicks
+        self.fields['ostrich'].queryset = available_ostriches
+
+        if request:
+            if not available_eggs.exists():
+                messages.warning(request, "No available eggs for sale.")
+            if not available_chicks.exists():
+                messages.warning(request, "No available chicks for sale.")
+            if not available_ostriches.exists():
+                messages.warning(request, "No available ostriches for sale.")
+
+        self.fields['egg'].required = False
+        self.fields['chick'].required = False
+        self.fields['ostrich'].required = False
+        
+class OstrichSelectionForm(forms.Form):
+    ostriches = forms.ModelMultipleChoiceField(
+        queryset=Ostrich.objects.filter(status='exists'),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+
+class OstrichSaleForm(forms.Form):
+    weight_kg = forms.DecimalField(max_digits=6, decimal_places=2, label="Weight (kg)")
+    price = forms.DecimalField(max_digits=10, decimal_places=2, label="Sale Price")
+
+class ChickSelectionForm(forms.Form):
+    chicks = forms.ModelMultipleChoiceField(
+        queryset=Chick.objects.filter(status='exists'),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+
+class ChickSaleForm(forms.Form):
+    price = forms.DecimalField(max_digits=10, decimal_places=2, label="Sale Price")
+
+class EggSelectionForm(forms.Form):
+    eggs = forms.ModelMultipleChoiceField(
+        queryset=Egg.objects.filter(fertile="Not Fertile", status='exists'),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )

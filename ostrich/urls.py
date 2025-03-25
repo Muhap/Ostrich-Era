@@ -40,5 +40,25 @@ urlpatterns = [
     path('add-other-cost/', views.add_other_cost, name='add_other_cost'),
     path('cost-list/', views.cost_list, name='cost_list'),
     
+    path('sales/add/', views.add_sale, name='add_sale'),
+    path('sales/list/', views.sales_list, name='sales_list'),
+
+    path('sales/ostrich/select/', views.select_ostriches, name='select_ostriches'),
+    path('sales/ostrich/details/', views.ostrich_sale_details, name='ostrich_sale_details'),
+    path('sales/ostrich/review/', views.ostrich_sale_review, name='ostrich_sale_review'),
+
+    path('sales/invoice/<int:sale_id>/', views.generate_invoice, name='generate_invoice'),
+
+    path('sales/chick/select/', views.select_chicks, name='select_chicks'),
+    path('sales/chick/details/', views.chick_sale_details, name='chick_sale_details'),
+    path('sales/chick/review/', views.chick_sale_review, name='chick_sale_review'),
+
+
+    path('sales/egg/select/', views.select_eggs, name='select_eggs'),
+    path('sales/egg/details/', views.egg_sale_details, name='egg_sale_details'),
+    path('sales/egg/review/', views.egg_sale_review, name='egg_sale_review'),
+    path('sales/egg/invoice/<int:sale_id>/', views.generate_egg_invoice, name='generate_egg_invoice'),
+
     path('extract-report/', views.extract_report, name='extract_report'),
+
 ]

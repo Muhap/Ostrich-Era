@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Review Egg Sale</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Egg Code</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for egg in eggs %}
+        <tr>
+            <td>{{ egg.egg_code }}</td>
+            <td>${{ sale_data|get_item:egg.id }}</td>
+            <td>
+                <a href="{% url 'generate_egg_invoice' sale.id %}" class="btn btn-primary">Download Invoice</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">Confirm Sale</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Review Chick Sale</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Chick</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for chick in chicks %}
+        <tr>
+            <td>{{ chick.name }}</td>
+            <td>${{ sale_data|get_item:chick.id }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">Confirm Sale</button>
+</form>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Review Sale</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Ostrich</th>
+            <th>Weight (kg)</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pair in ostrich_sale_pairs %}
+        <tr>
+            <td>{{ pair.ostrich.name }}</td>
+            <td>{{ pair.weight_kg }}</td>
+            <td>${{ pair.price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'sales_list' %}" class="btn btn-secondary">Cancel</a>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">Confirm Sale</button>
+</form>
+{% endblock %}

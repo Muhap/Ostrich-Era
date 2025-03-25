@@ -94,7 +94,7 @@ class Batch(models.Model):
     def number_of_eggs(self):
         return self.eggs.count()
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):    
         # Automatically calculate first_check_date and finish_date
         if not self.first_check_date:
             self.first_check_date = self.creation_date + timedelta(days=15)
@@ -265,3 +265,83 @@ class Cost(models.Model):
     def __str__(self):
         return f"{self.name} - {self.price} ({self.category})"
     
+class Sale(models.Model):
+    SALE_CATEGORIES = [
+        ('egg', 'Unfertile Egg'),
+        ('chick', 'Chick'),
+        ('ostrich', 'Ostrich'),
+    ]
+
+    category = models.CharField(max_length=10, choices=SALE_CATEGORIES)
+    egg = models.ForeignKey(Egg, on_delete=models.SET_NULL, null=True, blank=True)
+    chick = models.ForeignKey(Chick, on_delete=models.SET_NULL, null=True, blank=True)
+    ostrich = models.ForeignKey(Ostrich, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=1)
+    price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True)
+    sale_date = models.DateField(default=timezone.now)
+
+    def save(self, *args, **kwargs):
+        self.total_price = self.quantity * self.price_per_unit
+        
+        # Mark the item as sold
+        if self.egg:
+            self.egg.status = "sold"
+            self.egg.save()
+        if self.chick:
+            self.chick.status = "sold"
+            self.chick.save()
+        if self.ostrich:
+            self.ostrich.status = "sold"
+            self.ostrich.save()
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        item_name = self.egg.egg_code if self.egg else (self.chick.name if self.chick else self.ostrich.name)
+        return f"{item_name} - {self.get_category_display()} - ${self.total_price}"
+
+
+class OstrichSale(models.Model):
+    ostrich = models.ForeignKey(Ostrich, on_delete=models.CASCADE)
+    weight_kg = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    sale_date = models.DateField(default=timezone.now)
+    invoice_number = models.CharField(max_length=20, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Sale {self.invoice_number} - {self.ostrich.name}"
+
+class ChickSale(models.Model):
+    chick = models.ForeignKey(Chick, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    sale_date = models.DateField(default=timezone.now)
+    invoice_number = models.CharField(max_length=20, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Chick Sale {self.invoice_number} - {self.chick.name}"
+    
+class EggSale(models.Model):
+    egg = models.ForeignKey(Egg, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    sale_date = models.DateField(default=timezone.now)
+    invoice_number = models.CharField(max_length=20, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            self.invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Egg Sale {self.invoice_number} - {self.egg.egg_code}"
+

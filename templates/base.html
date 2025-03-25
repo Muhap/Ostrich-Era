@@ -107,20 +107,20 @@
                         </ul>
                     </li>
 
-                    <!-- Profit Dropdown -->
+                    <!-- Sales Dropdown -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="ProfitDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Profit
+                        <a class="nav-link dropdown-toggle" href="#" id="SalesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Sales
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="ProfitDropdown">
-                            <li><a class="dropdown-item" href="#">Unfertile Egg Profit</a></li>
-                            <li><a class="dropdown-item" href="#">Feather Profit</a></li>
-                            <li><a class="dropdown-item" href="#">Chick Profit</a></li>
-                            <li><a class="dropdown-item" href="#">Ostrich Profit</a></li>
-                            <li><a class="dropdown-item" href="#">Meat Profit</a></li>
-                            <li><a class="dropdown-item" href="#">Profit List</a></li>                      
+                        <ul class="dropdown-menu" aria-labelledby="SalesDropdown">
+                            <li><a class="dropdown-item" href="{% url 'select_ostriches' %}">Add New Ostrich Sale</a></li>
+                            <li><a class="dropdown-item" href="{% url 'select_chicks' %}">Add New Chick Sale</a></li>
+                            <li><a class="dropdown-item" href="{% url 'select_eggs' %}">Add New UnFertile Egg Sale</a></li>
+                            <li><a class="dropdown-item" href="{% url 'sales_list' %}">Sales List</a></li>                      
                         </ul>
                     </li>
+
+                    
                     <!-- Reports Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

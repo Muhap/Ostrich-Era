@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Sales List</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Invoice</th>
+            <th>Item</th>
+            <th>Weight (kg)</th>
+            <th>Price</th>
+            <th>Sale Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sale in ostrich_sales %}
+        <tr>
+            <td>{{ sale.invoice_number }}</td>
+            <td>{{ sale.ostrich.name }}</td>
+            <td>{{ sale.weight_kg }}</td>
+            <td>${{ sale.price }}</td>
+            <td>{{ sale.sale_date }}</td>
+            <td>
+                <a href="{% url 'generate_invoice' sale.id %}" class="btn btn-primary">Download Invoice</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No sales recorded.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

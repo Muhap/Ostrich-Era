@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Enter Chick Sale Details</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for chick in chicks %}
+    <div class="mb-3">
+        <label>{{ chick.name }} - Enter Price</label>
+        <input type="number" step="0.01" name="price_{{ chick.id }}" required>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Next</button>
+</form>
+{% endblock %}

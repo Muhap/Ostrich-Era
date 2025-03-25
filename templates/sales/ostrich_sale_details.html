@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Enter Sale Details</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for ostrich in ostriches %}
+    <div class="mb-3">
+        <label>{{ ostrich.name }} - Enter Weight (kg)</label>
+        <input type="number" step="0.01" name="weight_{{ ostrich.id }}" required>
+        <label>Enter Price</label>
+        <input type="number" step="0.01" name="price_{{ ostrich.id }}" required>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Next</button>
+</form>
+{% endblock %}

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Pitch, Family, Ostrich, Batch, Egg, FoodPurchase, FoodInventory, Chick, CostCategory, Cost
-from .forms import EggForm , FoodPurchaseForm, ChickFromEggForm, ChickFromOutsideForm, CostForm
+from .models import Pitch, Family, Ostrich, Batch, Egg, FoodPurchase, FoodInventory, Chick, CostCategory, Cost,OstrichSale ,EggSale, ChickSale
+from .forms import EggForm , FoodPurchaseForm, ChickFromEggForm, ChickFromOutsideForm, CostForm, SaleForm,OstrichSelectionForm,EggSelectionForm,ChickSelectionForm
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.db.models import Sum, F
@@ -246,7 +246,7 @@ def chick_list(request):
     page_number = request.GET.get('page')
     page_chicks = paginator.get_page(page_number)
 
-    return render(request, 'chicks/chick_list.html', {'page_chicks': page_chicks})
+    return render(request, 'chicks/chick_list.html', {'chicks': page_chicks})
 
 def select_egg_for_chick(request):
 
@@ -391,3 +391,290 @@ def cost_list(request):
         'category_totals': category_totals,
     }
     return render(request, 'costs/cost_list.html', context)
+
+
+from django.contrib import messages
+
+def add_sale(request):
+    form = SaleForm(request.POST or None, request=request)
+
+    if request.method == 'POST' and form.is_valid():
+        sale = form.save(commit=False)
+
+        # Ensure correct item is selected based on category
+        if sale.category == "egg":
+            sale.chick = None
+            sale.ostrich = None
+        elif sale.category == "chick":
+            sale.egg = None
+            sale.ostrich = None
+        elif sale.category == "ostrich":
+            sale.egg = None
+            sale.chick = None
+
+        sale.save()
+        messages.success(request, "Sale recorded successfully!")
+        return redirect('sales_list')
+
+    return render(request, 'sales/add_sale.html', {'form': form})
+
+
+def sales_list(request):
+    ostrich_sales = OstrichSale.objects.all().order_by('-sale_date')  # Get all ostrich sales
+
+    return render(request, 'sales/sales_list.html', {
+        'ostrich_sales': ostrich_sales,
+    })
+
+
+
+from django.http import JsonResponse
+from django.contrib import messages
+from django.urls import reverse
+
+# Step 1: Select Ostriches
+def select_ostriches(request):
+    if request.method == "POST":
+        form = OstrichSelectionForm(request.POST)
+        if form.is_valid():
+            request.session['selected_ostriches'] = list(form.cleaned_data['ostriches'].values_list('id', flat=True))
+            return redirect('ostrich_sale_details')
+    else:
+        form = OstrichSelectionForm()
+
+    return render(request, 'sales/select_ostriches.html', {'form': form})
+
+# Step 2: Enter Ostrich Sale Details
+def ostrich_sale_details(request):
+    selected_ostrich_ids = request.session.get('selected_ostriches', [])
+    ostriches = Ostrich.objects.filter(id__in=selected_ostrich_ids)
+
+    if request.method == "POST":
+        sale_data = []
+        for ostrich in ostriches:
+            weight = request.POST.get(f'weight_{ostrich.id}')
+            price = request.POST.get(f'price_{ostrich.id}')
+            if weight and price:
+                sale_data.append({
+                    'ostrich_id': ostrich.id,
+                    'weight_kg': weight,
+                    'price': price
+                })
+
+        request.session['ostrich_sale_data'] = sale_data
+        return redirect('ostrich_sale_review')
+
+    return render(request, 'sales/ostrich_sale_details.html', {'ostriches': ostriches})
+
+# Step 3: Review & Confirm Sale
+def ostrich_sale_review(request):
+    sale_data = request.session.get('ostrich_sale_data', [])
+    ostriches = Ostrich.objects.filter(id__in=[item['ostrich_id'] for item in sale_data])
+
+    # Zip ostrich objects with their sale data before passing to the template
+    ostrich_sale_pairs = []
+    for ostrich in ostriches:
+        for data in sale_data:
+            if ostrich.id == data['ostrich_id']:
+                ostrich_sale_pairs.append({'ostrich': ostrich, 'weight_kg': data['weight_kg'], 'price': data['price']})
+
+    if request.method == "POST":
+        invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        for item in sale_data:
+            ostrich = Ostrich.objects.get(id=item['ostrich_id'])
+            OstrichSale.objects.create(
+                ostrich=ostrich,
+                weight_kg=item['weight_kg'],
+                price=item['price'],
+                invoice_number=invoice_number
+            )
+            ostrich.status = "sold"
+            ostrich.save()
+
+        messages.success(request, "Sale completed successfully!")
+        return redirect('sales_list')
+
+    return render(request, 'sales/ostrich_sale_review.html', {'ostrich_sale_pairs': ostrich_sale_pairs})
+
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from django.shortcuts import get_object_or_404
+
+def generate_invoice(request, sale_id):
+    sale = get_object_or_404(OstrichSale, id=sale_id)
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_{sale.invoice_number}.pdf"'
+
+    # Create the PDF
+    pdf = canvas.Canvas(response, pagesize=A4)
+    pdf.setTitle(f"Invoice {sale.invoice_number}")
+
+    # Invoice Title
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawString(200, 800, f"Invoice - {sale.invoice_number}")
+
+    # Sale Details
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(100, 750, f"Sale Date: {sale.sale_date}")
+    pdf.drawString(100, 720, f"Ostrich Name: {sale.ostrich.name}")
+    pdf.drawString(100, 690, f"Weight: {sale.weight_kg} kg")
+    pdf.drawString(100, 660, f"Price: ${sale.price}")
+
+    # Footer
+    pdf.line(100, 640, 500, 640)
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(100, 620, f"Total: ${sale.price}")
+
+    # Finalize PDF
+    pdf.showPage()
+    pdf.save()
+
+    return response
+
+def select_chicks(request):
+    if request.method == "POST":
+        form = ChickSelectionForm(request.POST)
+        if form.is_valid():
+            request.session['selected_chicks'] = list(form.cleaned_data['chicks'].values_list('id', flat=True))
+            return redirect('chick_sale_details')
+    else:
+        form = ChickSelectionForm()
+
+    return render(request, 'sales/select_chicks.html', {'form': form})
+
+def chick_sale_details(request):
+    selected_chick_ids = request.session.get('selected_chicks', [])
+    chicks = Chick.objects.filter(id__in=selected_chick_ids)
+
+    if request.method == "POST":
+        sale_data = []
+        for chick in chicks:
+            price = request.POST.get(f'price_{chick.id}')
+            if price:
+                sale_data.append({'chick_id': chick.id, 'price': price})
+
+        request.session['chick_sale_data'] = sale_data
+        return redirect('chick_sale_review')
+
+    return render(request, 'sales/chick_sale_details.html', {'chicks': chicks})
+
+def chick_sale_review(request):
+    sale_data = request.session.get('chick_sale_data', [])
+    chicks = Chick.objects.filter(id__in=[item['chick_id'] for item in sale_data])
+
+    if request.method == "POST":
+        invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        for item in sale_data:
+            chick = Chick.objects.get(id=item['chick_id'])
+            ChickSale.objects.create(
+                chick=chick,
+                price=item['price'],
+                invoice_number=invoice_number
+            )
+            chick.status = "sold"
+            chick.save()
+
+        messages.success(request, "Chick sale completed successfully!")
+        return redirect('sales_list')
+
+    return render(request, 'sales/chick_sale_review.html', {'chicks': chicks, 'sale_data': sale_data})
+
+
+def select_eggs(request):
+    if request.method == "POST":
+        form = EggSelectionForm(request.POST)
+        if form.is_valid():
+            request.session['selected_eggs'] = list(form.cleaned_data['eggs'].values_list('id', flat=True))
+            return redirect('egg_sale_details')
+    else:
+        form = EggSelectionForm()
+
+    return render(request, 'sales/select_eggs.html', {'form': form})
+
+
+def egg_sale_details(request):
+    selected_egg_ids = request.session.get('selected_eggs', [])
+    eggs = Egg.objects.filter(id__in=selected_egg_ids)
+
+    if request.method == "POST":
+        sale_data = []
+        for egg in eggs:
+            price = request.POST.get(f'price_{egg.id}')
+            if price:
+                sale_data.append({'egg_id': egg.id, 'price': price})
+
+        request.session['egg_sale_data'] = sale_data
+        return redirect('egg_sale_review')
+
+    return render(request, 'sales/egg_sale_details.html', {'eggs': eggs})
+
+def egg_sale_review(request):
+    sale_data = request.session.get('egg_sale_data', [])
+    eggs = Egg.objects.filter(id__in=[item['egg_id'] for item in sale_data])
+
+    # Pair eggs with sale data before passing to the template
+    egg_sale_pairs = []
+    for egg in eggs:
+        for data in sale_data:
+            if egg.id == data['egg_id']:
+                egg_sale_pairs.append({'egg': egg, 'price': data['price']})
+
+    if request.method == "POST":
+        invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+        for item in sale_data:
+            egg = Egg.objects.get(id=item['egg_id'])
+            EggSale.objects.create(
+                egg=egg,
+                price=item['price'],
+                invoice_number=invoice_number
+            )
+            egg.status = "sold"
+            egg.save()
+
+        messages.success(request, "Egg sale completed successfully!")
+        return redirect('sales_list')
+
+    return render(request, 'sales/egg_sale_review.html', {'egg_sale_pairs': egg_sale_pairs})
+
+
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from django.shortcuts import get_object_or_404
+
+def generate_egg_invoice(request, sale_id):
+    sale = get_object_or_404(EggSale, id=sale_id)
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_{sale.invoice_number}.pdf"'
+
+    # Create the PDF
+    pdf = canvas.Canvas(response, pagesize=A4)
+    pdf.setTitle(f"Invoice {sale.invoice_number}")
+
+    # Invoice Title
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawString(200, 800, f"Invoice - {sale.invoice_number}")
+
+    # Sale Details
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(100, 750, f"Sale Date: {sale.sale_date}")
+    pdf.drawString(100, 720, f"Egg Code: {sale.egg.egg_code}")
+    pdf.drawString(100, 690, f"Price: ${sale.price}")
+
+    # Footer
+    pdf.line(100, 660, 500, 660)
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(100, 640, f"Total: ${sale.price}")
+
+    # Finalize PDF
+    pdf.showPage()
+    pdf.save()
+
+    return response
