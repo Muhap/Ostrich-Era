@@ -1,0 +1,66 @@
+/* ✅ Navbar Styling */
+.navbar {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    min-height: 65px; /* Adjust based on logo size */
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* ✅ Navbar Brand (Logo + Name) */
+.navbar-brand img {
+    height: 100%;
+    max-height: 65px; 
+    object-fit: contain;
+    transition: transform 0.3s ease-in-out;
+}
+
+.navbar-brand:hover img {
+    transform: scale(1.1); /* Slight zoom effect */
+}
+
+/* ✅ Navbar Links */
+.navbar-nav .nav-link {
+    font-size: 16px;
+    font-weight: 500;
+    transition: color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #FFD700 !important; /* Gold on hover */
+    transform: translateY(-2px);
+}
+
+/* ✅ Dropdown Menus */
+.nav-item.dropdown:hover .dropdown-menu {
+    display: block;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* ✅ Smooth Dropdown Fade-in Effect */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ✅ Buttons */
+.btn {
+    transition: all 0.3s ease-in-out;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* ✅ Sticky Footer */
+.footer {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.footer:hover {
+    background: linear-gradient(45deg, #0056b3, #007bff);
+}

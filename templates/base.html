@@ -1,55 +1,51 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ostrich Farm Management System</title>
+    <title>{% block title %}Ostrich Management{% endblock %}</title>
 
-    <!-- Add Bootstrap CSS for styling -->
-    <!--<link href="https://bootswatch.com/5/lux/bootstrap.min.css" rel="stylesheet">-->
-    <!---->
-    <link href="https://bootswatch.com/5/darkly/bootstrap.min.css" rel="stylesheet">
-    <!--<link href="https://bootswatch.com/5/simplex/bootstrap.min.css" rel="stylesheet">-->
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     
-    <!---->
-    
+    <!-- Custom Local CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
-<body>
-       {% if messages %}
-<div class="messages">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
+<body class="d-flex flex-column min-vh-100">
 
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'home' %}">Track Na3am</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <!-- ✅ Fixed Navbar with Dropdowns -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container">
+            <!-- ✅ Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Logo"  class="me-2">
+                <span>Track Na3am</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav"> 
                 <ul class="navbar-nav">
-                    <!-- Farm Settings Dropdown -->
+                    <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+
+                    <!-- ✅ Farm Settings Dropdown -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="farmSettingsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="farmDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Farm Settings
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="farmSettingsDropdown">
+                        <ul class="dropdown-menu" aria-labelledby="farmDropdown">
                             <li><a class="dropdown-item" href="{% url 'add_pitch' %}">Add Pitch</a></li>
                             <li><a class="dropdown-item" href="{% url 'add_family' %}">Add Family</a></li>
-                            <li><a class="dropdown-item" href="{% url 'family_list' %}">Families</a></li>
+                            <li><a class="dropdown-item" href="{% url 'family_list' %}">Family List</a></li>
                             <li><a class="dropdown-item" href="{% url 'add_ostrich' %}">Add Ostrich</a></li>
-                            <li><a class="dropdown-item" href="{% url 'ostrich_list' %}">Ostriches</a></li>
+                            <li><a class="dropdown-item" href="{% url 'ostrich_list' %}">Ostrich List</a></li>
                         </ul>
                     </li>
 
-                    <!-- Eggs Dropdown -->
+                    <!-- ✅ Eggs Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="eggsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Eggs
@@ -62,62 +58,43 @@
                         </ul>
                     </li>
 
-                    <!-- Chicks Dropdown -->
+                    <!-- ✅ Chicks Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="chicksDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Chicks
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="chicksDropdown">
-                            <li><a class="dropdown-item" href="{% url 'add_chick_outside' %}">Add New Chick </a></li>
-                            <li><a class="dropdown-item" href="{% url 'select_egg_for_chick' %}">Select Egg For Chick </a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_chick_outside' %}">Add Chick</a></li>
+                            <li><a class="dropdown-item" href="{% url 'select_egg_for_chick' %}">Select Egg for Chick</a></li>
                             <li><a class="dropdown-item" href="{% url 'chick_list' %}">Chick List</a></li>
                         </ul>
                     </li>
-                    
-                    <!-- Food Dropdown -->
+
+                    <!-- ✅ Food Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="foodDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Food
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="foodDropdown">
-                            <li><a class="dropdown-item" href="{% url 'add_food_purchase' %}">Add Food Item</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_food_purchase' %}">Add Food Purchase</a></li>
                             <li><a class="dropdown-item" href="{% url 'food_inventory' %}">Food Inventory</a></li>
                         </ul>
                     </li>
 
-                    <!-- costs Dropdown -->
+                    <!-- ✅ Sales Dropdown -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="costsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Costs
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="costsDropdown">
-                            <li><a class="dropdown-item" href="{% url 'add_farm_setting_cost' %}">Farm Setting Costs</a></li>
-                            <li><a class="dropdown-item" href="{% url 'food_costs' %}">Food Costs</a></li>
-                            <li><a class="dropdown-item" href="{% url 'add_medical_cost' %}">Medical Costs</a></li>
-                            <li><a class="dropdown-item" href="{% url 'add_rent_tax_cost' %}">Rent and Taxes</a></li>
-                            <li><a class="dropdown-item" href="{% url 'add_electricity_water_cost' %}">Electricity and Water</a></li>
-                            <li><a class="dropdown-item" href="{% url 'add_salary_cost' %}">Salaries</a></li>
-                            <li><a class="dropdown-item" href="{% url 'add_other_cost' %}">Other Costs</a></li>       
-                            <li><a class="dropdown-item" href="{% url 'cost_list' %}">Costs List</a></li>                    
-                            
-                        </ul>
-                    </li>
-
-                    <!-- Sales Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="SalesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="salesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Sales
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="SalesDropdown">
-                            <li><a class="dropdown-item" href="{% url 'select_ostriches' %}">Add New Ostrich Sale</a></li>
-                            <li><a class="dropdown-item" href="{% url 'select_chicks' %}">Add New Chick Sale</a></li>
-                            <li><a class="dropdown-item" href="{% url 'select_eggs' %}">Add New UnFertile Egg Sale</a></li>
-                            <li><a class="dropdown-item" href="{% url 'sales_list' %}">Sales List</a></li>                      
+                        <ul class="dropdown-menu" aria-labelledby="salesDropdown">
+                            <li><a class="dropdown-item" href="{% url 'select_ostriches' %}">Sell Ostrich</a></li>
+                            <li><a class="dropdown-item" href="{% url 'select_chicks' %}">Sell Chick</a></li>
+                            <li><a class="dropdown-item" href="{% url 'select_eggs' %}">Sell Egg</a></li>
+                            <li><a class="dropdown-item" href="{% url 'sales_list' %}">Sales List</a></li>
                         </ul>
                     </li>
 
-                    
-                    <!-- Reports Dropdown -->
+                    <!-- ✅ Reports Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Reports
@@ -127,34 +104,25 @@
                             <li><a class="dropdown-item" href="{% url 'insights' %}">Insights</a></li>
                         </ul>
                     </li>
-                    <!-- chat with AI Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="chatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Ostrich-era AI
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="chatDropdown">
-                            <li><a class="dropdown-item" href="#">ask about something </a></li>
-                            <li><a class="dropdown-item" href="#">generate feedback </a></li>
-                        </ul>
-                    </li>
+
+                    <!-- ✅ AI Chat -->
+                    <li class="nav-item"><a class="nav-link" href="#">AI Chat</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Content Block -->
-    <div class="container mt-4">
-        {% block content %}
-        <!-- Page-specific content goes here -->
-        {% endblock %}
+    <!-- Page Content -->
+    <div class="container mt-5 pt-5 flex-grow-1">
+        {% block content %}{% endblock %}
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-primary text-white text-center p-3 mt-4">
-        <p>&copy; 2025 Ostrich Farm Management System</p>
+    <!-- ✅ Sticky Footer -->
+    <footer class="footer text-center py-3 bg-primary text-white mt-auto">
+        &copy; 2025 Ostrich Management System
     </footer>
 
-    <!-- Add Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
