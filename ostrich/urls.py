@@ -67,6 +67,4 @@ urlpatterns = [
     path('insights/', views.insights, name='insights'),
 
 
-
-
 ]

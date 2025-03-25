@@ -293,14 +293,14 @@ def add_chick_outside(request):
     return render(request, 'chicks/add_chick_outside.html', {'form': form})
 
 def chick_list(request):
-
     chicks = Chick.objects.all().order_by('-creation_date')
 
-    paginator = Paginator(chicks, 20)  # Show 20 chicks per page
+    paginator = Paginator(chicks, 10)  # Show 10 chicks per page
     page_number = request.GET.get('page')
     page_chicks = paginator.get_page(page_number)
 
-    return render(request, 'chicks/chick_list.html', {'chicks': page_chicks})
+    return render(request, 'chicks/chick_list.html', {'page_chicks': page_chicks})  # Remove 'chicks'
+
 
 def select_egg_for_chick(request):
 
@@ -1039,3 +1039,8 @@ def insights(request):
         'time_grouping': time_grouping,
         'chart_type': chart_type
     })
+
+
+
+
+

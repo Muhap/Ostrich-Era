@@ -1,6 +1,7 @@
-pip
 venv
 django
 matplotlib
-transformers
-torch
+transformers 
+torch 
+sentencepiece
+llama-cpp-python
