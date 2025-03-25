@@ -4,9 +4,18 @@ from .forms import EggForm , FoodPurchaseForm, ChickFromEggForm, ChickFromOutsid
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.db.models import Sum, F
+from django.db import IntegrityError
 
 def home(request):
-    return render(request, 'home.html')
+    piches_count = Pitch.objects.all().count()
+    ostrich_count = Ostrich.objects.all().filter(status = 'exists').count()
+    chick_count = Chick.objects.all().filter(status = 'exists').count()
+    Context = {
+        'piches_count': piches_count,
+        'ostrich_count': ostrich_count,
+        'chick_count': chick_count
+    }
+    return render(request, 'home.html', Context)
 
 def farm_settings(request):
     return render(request, 'farm_settings/farm_setting.html')
@@ -25,33 +34,89 @@ def extract_report(request):
 def add_pitch(request):
     if request.method == 'POST':
         pitch_number = request.POST.get('pitch_number')
-        Pitch.objects.create(pitch_number=pitch_number)
-        return redirect('farm_settings')
+
+        # Check if pitch number already exists
+        if Pitch.objects.filter(pitch_number=pitch_number).exists():
+            messages.error(request, f"Pitch number {pitch_number} already exists!")
+            return render(request, 'farm_settings/add_pitch.html')
+
+        try:
+            Pitch.objects.create(pitch_number=pitch_number)
+            messages.success(request, "Pitch added successfully!")
+            return redirect('home')
+        except IntegrityError:
+            messages.error(request, "An error occurred while adding the pitch. Please try again.")
+
     return render(request, 'farm_settings/add_pitch.html')
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Pitch, Family, Ostrich
 
 def add_family(request):
     pitches = Pitch.objects.all()
+
     if request.method == 'POST':
         family_name = request.POST.get('family_name')
         pitch_id = request.POST.get('pitch')
-        pitch = Pitch.objects.get(id=pitch_id)
+
+        # Ensure pitch exists
+        pitch = get_object_or_404(Pitch, id=pitch_id)
+
+        # Check if family name already exists in the selected pitch
+        if Family.objects.filter(Family_name=family_name, pitch=pitch).exists():
+            messages.error(request, f"Family '{family_name}' already exists in Pitch {pitch.pitch_number}!")
+            return render(request, 'farm_settings/add_family.html', {'pitches': pitches})
+
+        # Create family
         Family.objects.create(Family_name=family_name, pitch=pitch)
-        return redirect('farm_settings')
+        messages.success(request, f"Family '{family_name}' added successfully!")
+        return redirect('family_list.html')
+
     return render(request, 'farm_settings/add_family.html', {'pitches': pitches})
+
 
 def add_ostrich(request):
     families = Family.objects.all()
+
     if request.method == 'POST':
         name = request.POST.get('name')
         age = request.POST.get('age')
         gender = request.POST.get('gender')
         family_id = request.POST.get('family')
-        family = Family.objects.get(id=family_id)
+
+        # Ensure family exists
+        family = get_object_or_404(Family, id=family_id)
+
+        # Check if an ostrich with the same name already exists in the selected family
+        if Ostrich.objects.filter(name=name, family=family).exists():
+            messages.error(request, f"Ostrich '{name}' already exists in Family {family.Family_name}!")
+            return render(request, 'farm_settings/add_ostrich.html', {'families': families})
+
+        # Create ostrich
         Ostrich.objects.create(name=name, age=age, gender=gender, family=family)
-        return redirect('farm_settings')
+        messages.success(request, f"Ostrich '{name}' added successfully!")
+        return redirect('farm_settings/ostrich_list.html')
+
     return render(request, 'farm_settings/add_ostrich.html', {'families': families})
 
+def family_list(request):
+    families = Family.objects.all().order_by('pitch__pitch_number', 'Family_name')
+    
+    paginator = Paginator(families, 10)  # Show 10 families per page
+    page_number = request.GET.get('page')
+    page_families = paginator.get_page(page_number)
 
+    return render(request, 'farm_settings/family_list.html', {'families': page_families})
+
+def ostrich_list(request):
+    ostriches = Ostrich.objects.all().filter(status = 'exists').order_by('family__Family_name', 'name')
+    
+    paginator = Paginator(ostriches, 10)  # Show 10 ostriches per page
+    page_number = request.GET.get('page')
+    page_ostriches = paginator.get_page(page_number)
+
+    return render(request, 'farm_settings/ostrich_list.html', {'ostriches': page_ostriches})
 
 
 def add_egg(request):
@@ -145,9 +210,6 @@ def batch_detail(request, batch_id):
 
     return render(request, 'eggs/batch_detail.html', {'batch': batch})
 
-
-
-
 def food(request):
     return render(request, 'food.html')
 
@@ -158,7 +220,6 @@ def food_costs(request):
         'total_food_cost': total_food_cost,
     }
     return render(request, 'costs/food_costs.html', context)
-
 
 def add_food_purchase(request):
     if request.method == 'POST':
@@ -173,7 +234,7 @@ def add_food_purchase(request):
                 price=food_purchase.quantity_kg * food_purchase.price_per_kg,
                 category=food_cost_category,
                 date_paid=food_purchase.purchase_date,
-                notes=f"Food purchase of {food_purchase.quantity_kg} kg at ${food_purchase.price_per_kg}/kg",
+                notes=f"Food purchase of {food_purchase.quantity_kg} kg at ج.م{food_purchase.price_per_kg}/kg",
             )
 
             # Update the food inventory after adding a purchase
@@ -187,6 +248,7 @@ def add_food_purchase(request):
         form = FoodPurchaseForm()
 
     return render(request, 'food/add_food_purchase.html', {'form': form})
+
 def food_inventory(request):
     FoodInventory.objects.get_or_create(id=1, defaults={'current_inventory': 0})
     try:
@@ -199,9 +261,11 @@ def food_inventory(request):
     except FoodInventory.DoesNotExist:
         current_inventory = 0
         finish_date = "No inventory data available."
+    total_adult_ostriches = Ostrich.objects.all().count() + Chick.total_adult_chicks()
     context = {
         'current_inventory': current_inventory,
         'finish_date': finish_date,
+        'total_adult_ostriches': total_adult_ostriches
     }
     return render(request, 'food/food_inventory.html', context)
 
@@ -353,7 +417,6 @@ def add_other_cost(request):
         form = CostForm(initial={'category': other_category})
     return render(request, 'costs/add_other_cost.html', {'form': form})
 
-
 def cost_list(request):
     # Get all costs
     costs = Cost.objects.all().order_by('-date_paid')
@@ -392,9 +455,6 @@ def cost_list(request):
     }
     return render(request, 'costs/cost_list.html', context)
 
-
-from django.contrib import messages
-
 def add_sale(request):
     form = SaleForm(request.POST or None, request=request)
 
@@ -418,20 +478,87 @@ def add_sale(request):
 
     return render(request, 'sales/add_sale.html', {'form': form})
 
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from django.db.models import Sum
+from .models import OstrichSale, ChickSale, EggSale
 
 def sales_list(request):
-    ostrich_sales = OstrichSale.objects.all().order_by('-sale_date')  # Get all ostrich sales
+    # Combine all sales into a single list
+    ostrich_sales = OstrichSale.objects.all().values('id', 'invoice_number', 'ostrich__name', 'weight_kg', 'price', 'sale_date')
+    chick_sales = ChickSale.objects.all().values('id', 'invoice_number', 'chick__name', 'price', 'sale_date')
+    egg_sales = EggSale.objects.all().values('id', 'invoice_number', 'egg__egg_code', 'price', 'sale_date')
 
-    return render(request, 'sales/sales_list.html', {
-        'ostrich_sales': ostrich_sales,
-    })
+    all_sales = []
 
+    for sale in ostrich_sales:
+        all_sales.append({
+            'id': sale['id'],
+            'invoice_number': sale['invoice_number'],
+            'item': sale['ostrich__name'],
+            'weight': sale['weight_kg'],
+            'price': sale['price'],
+            'sale_date': sale['sale_date'],
+            'category': 'Ostrich'
+        })
+
+    for sale in chick_sales:
+        all_sales.append({
+            'id': sale['id'],
+            'invoice_number': sale['invoice_number'],
+            'item': sale['chick__name'],
+            'weight': None,  # Chicks do not have weight in sales
+            'price': sale['price'],
+            'sale_date': sale['sale_date'],
+            'category': 'Chick'
+        })
+
+    for sale in egg_sales:
+        all_sales.append({
+            'id': sale['id'],
+            'invoice_number': sale['invoice_number'],
+            'item': sale['egg__egg_code'],
+            'weight': None,  # Eggs do not have weight in sales
+            'price': sale['price'],
+            'sale_date': sale['sale_date'],
+            'category': 'Egg'
+        })
+
+    # Filtering by category
+    selected_categories = request.GET.getlist('categories')
+    if selected_categories:
+        all_sales = [sale for sale in all_sales if sale['category'] in selected_categories]
+
+    # Sorting sales by sale_date (newest first)
+    all_sales = sorted(all_sales, key=lambda x: x['sale_date'], reverse=True)
+
+    # Pagination
+    paginator = Paginator(all_sales, 10)  # 10 sales per page
+    page_number = request.GET.get('page')
+    page_sales = paginator.get_page(page_number)
+
+    # Calculate total revenue
+    total_revenue = sum(sale['price'] for sale in all_sales)
+
+    # Category totals
+    category_totals = []
+    for category in ['Ostrich', 'Chick', 'Egg']:
+        category_total = sum(sale['price'] for sale in all_sales if sale['category'] == category)
+        category_totals.append({'category_name': category, 'total': category_total})
+
+    context = {
+        'page_sales': page_sales,
+        'total_revenue': total_revenue,
+        'category_totals': category_totals,
+        'selected_categories': selected_categories,
+    }
+
+    return render(request, 'sales/sales_list.html', context)
 
 
 from django.http import JsonResponse
 from django.contrib import messages
 from django.urls import reverse
-
 # Step 1: Select Ostriches
 def select_ostriches(request):
     if request.method == "POST":
@@ -443,7 +570,6 @@ def select_ostriches(request):
         form = OstrichSelectionForm()
 
     return render(request, 'sales/select_ostriches.html', {'form': form})
-
 # Step 2: Enter Ostrich Sale Details
 def ostrich_sale_details(request):
     selected_ostrich_ids = request.session.get('selected_ostriches', [])
@@ -465,7 +591,6 @@ def ostrich_sale_details(request):
         return redirect('ostrich_sale_review')
 
     return render(request, 'sales/ostrich_sale_details.html', {'ostriches': ostriches})
-
 # Step 3: Review & Confirm Sale
 def ostrich_sale_review(request):
     sale_data = request.session.get('ostrich_sale_data', [])
@@ -496,13 +621,12 @@ def ostrich_sale_review(request):
 
     return render(request, 'sales/ostrich_sale_review.html', {'ostrich_sale_pairs': ostrich_sale_pairs})
 
-
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from django.shortcuts import get_object_or_404
 
-def generate_invoice(request, sale_id):
+def generate_ostrich_invoice(request, sale_id):
     sale = get_object_or_404(OstrichSale, id=sale_id)
 
     # Create PDF response
@@ -522,12 +646,12 @@ def generate_invoice(request, sale_id):
     pdf.drawString(100, 750, f"Sale Date: {sale.sale_date}")
     pdf.drawString(100, 720, f"Ostrich Name: {sale.ostrich.name}")
     pdf.drawString(100, 690, f"Weight: {sale.weight_kg} kg")
-    pdf.drawString(100, 660, f"Price: ${sale.price}")
+    pdf.drawString(100, 660, f"Price: {sale.price} L.E")
 
     # Footer
     pdf.line(100, 640, 500, 640)
     pdf.setFont("Helvetica-Bold", 14)
-    pdf.drawString(100, 620, f"Total: ${sale.price}")
+    pdf.drawString(100, 620, f"Total: {sale.price} L.E")
 
     # Finalize PDF
     pdf.showPage()
@@ -561,10 +685,16 @@ def chick_sale_details(request):
         return redirect('chick_sale_review')
 
     return render(request, 'sales/chick_sale_details.html', {'chicks': chicks})
-
 def chick_sale_review(request):
     sale_data = request.session.get('chick_sale_data', [])
     chicks = Chick.objects.filter(id__in=[item['chick_id'] for item in sale_data])
+
+    # Prepare data as a list of dictionaries
+    chick_sale_pairs = []
+    for chick in chicks:
+        for item in sale_data:
+            if chick.id == item['chick_id']:
+                chick_sale_pairs.append({'chick': chick, 'price': item['price']})
 
     if request.method == "POST":
         invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
@@ -581,7 +711,7 @@ def chick_sale_review(request):
         messages.success(request, "Chick sale completed successfully!")
         return redirect('sales_list')
 
-    return render(request, 'sales/chick_sale_review.html', {'chicks': chicks, 'sale_data': sale_data})
+    return render(request, 'sales/chick_sale_review.html', {'chick_sale_pairs': chick_sale_pairs})
 
 
 def select_eggs(request):
@@ -594,7 +724,6 @@ def select_eggs(request):
         form = EggSelectionForm()
 
     return render(request, 'sales/select_eggs.html', {'form': form})
-
 
 def egg_sale_details(request):
     selected_egg_ids = request.session.get('selected_eggs', [])
@@ -616,12 +745,12 @@ def egg_sale_review(request):
     sale_data = request.session.get('egg_sale_data', [])
     eggs = Egg.objects.filter(id__in=[item['egg_id'] for item in sale_data])
 
-    # Pair eggs with sale data before passing to the template
+    # Prepare sale data in a structured list
     egg_sale_pairs = []
     for egg in eggs:
-        for data in sale_data:
-            if egg.id == data['egg_id']:
-                egg_sale_pairs.append({'egg': egg, 'price': data['price']})
+        for item in sale_data:
+            if egg.id == item['egg_id']:
+                egg_sale_pairs.append({'egg': egg, 'price': item['price']})
 
     if request.method == "POST":
         invoice_number = f"INV-{timezone.now().strftime('%Y%m%d%H%M%S')}"
@@ -640,41 +769,92 @@ def egg_sale_review(request):
 
     return render(request, 'sales/egg_sale_review.html', {'egg_sale_pairs': egg_sale_pairs})
 
-
-
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from django.shortcuts import get_object_or_404
+from .models import EggSale
 
 def generate_egg_invoice(request, sale_id):
+    # Ensure the EggSale record exists, or return 404
     sale = get_object_or_404(EggSale, id=sale_id)
+
+    if not sale:
+        raise Http404("Egg sale not found.")
 
     # Create PDF response
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="Invoice_{sale.invoice_number}.pdf"'
 
-    # Create the PDF
-    pdf = canvas.Canvas(response, pagesize=A4)
-    pdf.setTitle(f"Invoice {sale.invoice_number}")
+    try:
+        pdf = canvas.Canvas(response, pagesize=A4)
+        pdf.setTitle(f"Invoice {sale.invoice_number}")
 
-    # Invoice Title
-    pdf.setFont("Helvetica-Bold", 18)
-    pdf.drawString(200, 800, f"Invoice - {sale.invoice_number}")
+        # Invoice Title
+        pdf.setFont("Helvetica-Bold", 18)
+        pdf.drawString(200, 800, f"Invoice - {sale.invoice_number}")
 
-    # Sale Details
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(100, 750, f"Sale Date: {sale.sale_date}")
-    pdf.drawString(100, 720, f"Egg Code: {sale.egg.egg_code}")
-    pdf.drawString(100, 690, f"Price: ${sale.price}")
+        # Sale Details
+        pdf.setFont("Helvetica", 12)
+        pdf.drawString(100, 750, f"Sale Date: {sale.sale_date}")
+        pdf.drawString(100, 720, f"Egg Code: {sale.egg.egg_code}")
+        pdf.drawString(100, 690, f"Price: {sale.price} L.E")
 
-    # Footer
-    pdf.line(100, 660, 500, 660)
-    pdf.setFont("Helvetica-Bold", 14)
-    pdf.drawString(100, 640, f"Total: ${sale.price}")
+        # Footer
+        pdf.line(100, 660, 500, 660)
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawString(100, 640, f"Total: {sale.price} L.E")
 
-    # Finalize PDF
-    pdf.showPage()
-    pdf.save()
+        pdf.showPage()
+        pdf.save()
 
-    return response
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"Error generating invoice: {e}", status=500)
+
+from django.http import HttpResponse, Http404
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from django.shortcuts import get_object_or_404
+from .models import ChickSale
+
+def generate_chick_invoice(request, sale_id):
+    # Ensure the ChickSale record exists, or return 404
+    sale = get_object_or_404(ChickSale, id=sale_id)
+
+    if not sale:
+        raise Http404("Chick sale not found.")
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Invoice_{sale.invoice_number}.pdf"'
+
+    try:
+        pdf = canvas.Canvas(response, pagesize=A4)
+        pdf.setTitle(f"Invoice {sale.invoice_number}")
+
+        # Invoice Title
+        pdf.setFont("Helvetica-Bold", 18)
+        pdf.drawString(200, 800, f"Invoice - {sale.invoice_number}")
+
+        # Sale Details
+        pdf.setFont("Helvetica", 12)
+        pdf.drawString(100, 750, f"Sale Date: {sale.sale_date}")
+        pdf.drawString(100, 720, f"Chick Name: {sale.chick.name}")
+        pdf.drawString(100, 690, f"Price: {sale.price} L.E")
+
+        # Footer
+        pdf.line(100, 660, 500, 660)
+        pdf.setFont("Helvetica-Bold", 14)
+        pdf.drawString(100, 640, f"Total: {sale.price} L.E")
+
+        pdf.showPage()
+        pdf.save()
+
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"Error generating invoice: {e}", status=500)
+
+

@@ -1,22 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Review Egg Sale</h2>
+<h2>Review Chick Sale</h2>
 
 <table class="table">
     <thead>
         <tr>
-            <th>Egg Code</th>
-            <th>Price</th>
+            <th>Chick</th>
+            <th>Price (ج.م)</th>
         </tr>
     </thead>
     <tbody>
-        {% for egg in eggs %}
+        {% for pair in chick_sale_pairs %}
         <tr>
-            <td>{{ egg.egg_code }}</td>
-            <td>${{ sale_data|get_item:egg.id }}</td>
-            <td>
-                <a href="{% url 'generate_egg_invoice' sale.id %}" class="btn btn-primary">Download Invoice</a>
-            </td>
+            <td>{{ pair.chick.name }}</td>
+            <td>ج.م{{ pair.price }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2" class="text-center">No chicks available for sale.</td>
         </tr>
         {% endfor %}
     </tbody>

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Family List</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Family Name</th>
+            <th>Pitch</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for family in families %}
+        <tr>
+            <td>{{ family.Family_name }}</td>
+            <td>{{ family.pitch.pitch_number }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2" class="text-center">No families found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<div class="pagination">
+    {% if families.has_previous %}
+        <a href="?page=1">First</a>
+        <a href="?page={{ families.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ families.number }} of {{ families.paginator.num_pages }}</span>
+
+    {% if families.has_next %}
+        <a href="?page={{ families.next_page_number }}">Next</a>
+        <a href="?page={{ families.paginator.num_pages }}">Last</a>
+    {% endif %}
+</div>
+
+{% endblock %}

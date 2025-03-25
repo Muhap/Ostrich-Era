@@ -6,7 +6,7 @@
 
 <!-- Display Total Cost -->
 <div class="alert alert-info">
-    <strong>Total Cost:</strong> {{ total_cost|floatformat:2|intcomma }} $
+    <strong>Total Cost:</strong> {{ total_cost|floatformat:2|intcomma }} ج.م
 </div>
 
 <!-- Display Category Totals -->
@@ -15,7 +15,7 @@
     {% for category_total in category_totals %}
     <li class="list-group-item d-flex justify-content-between align-items-center">
         <strong>{{ category_total.category_name }}</strong>
-        <span class="badge bg-primary rounded-pill">{{ category_total.total|floatformat:2|intcomma }} $</span>
+        <span class="badge bg-primary rounded-pill">{{ category_total.total|floatformat:2|intcomma }} ج.م</span>
     </li>
     {% endfor %}
 </ul>
@@ -38,7 +38,7 @@
     <thead>
         <tr>
             <th>Name</th>
-            <th>Price ($)</th>
+            <th>Price (ج.م)</th>
             <th>Category</th>
             <th>Date Paid</th>
             <th>Notes</th>

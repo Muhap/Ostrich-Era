@@ -299,7 +299,7 @@ class Sale(models.Model):
 
     def __str__(self):
         item_name = self.egg.egg_code if self.egg else (self.chick.name if self.chick else self.ostrich.name)
-        return f"{item_name} - {self.get_category_display()} - ${self.total_price}"
+        return f"{item_name} - {self.get_category_display()} - ج.م{self.total_price}"
 
 
 class OstrichSale(models.Model):

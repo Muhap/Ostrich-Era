@@ -10,6 +10,8 @@ urlpatterns = [
     path('add-pitch/', views.add_pitch, name='add_pitch'),
     path('add-family/', views.add_family, name='add_family'),
     path('add-ostrich/', views.add_ostrich, name='add_ostrich'),
+    path('farm_settings/families/', views.family_list, name='family_list'),
+    path('farm_settings/ostriches/', views.ostrich_list, name='ostrich_list'),
 
     path('eggs/', views.eggs, name='eggs'),
     path('add-egg/', views.add_egg, name='add_egg'),
@@ -47,8 +49,6 @@ urlpatterns = [
     path('sales/ostrich/details/', views.ostrich_sale_details, name='ostrich_sale_details'),
     path('sales/ostrich/review/', views.ostrich_sale_review, name='ostrich_sale_review'),
 
-    path('sales/invoice/<int:sale_id>/', views.generate_invoice, name='generate_invoice'),
-
     path('sales/chick/select/', views.select_chicks, name='select_chicks'),
     path('sales/chick/details/', views.chick_sale_details, name='chick_sale_details'),
     path('sales/chick/review/', views.chick_sale_review, name='chick_sale_review'),
@@ -57,7 +57,11 @@ urlpatterns = [
     path('sales/egg/select/', views.select_eggs, name='select_eggs'),
     path('sales/egg/details/', views.egg_sale_details, name='egg_sale_details'),
     path('sales/egg/review/', views.egg_sale_review, name='egg_sale_review'),
+    
     path('sales/egg/invoice/<int:sale_id>/', views.generate_egg_invoice, name='generate_egg_invoice'),
+    path('sales/chick/invoice/<int:sale_id>/', views.generate_chick_invoice, name='generate_chick_invoice'),
+    path('sales/invoice/<int:sale_id>/', views.generate_ostrich_invoice, name='generate_ostrich_invoice'),
+
 
     path('extract-report/', views.extract_report, name='extract_report'),
 

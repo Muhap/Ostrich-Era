@@ -1,35 +1,96 @@
 {% extends 'base.html' %}
+{% load humanize %} <!-- For number formatting -->
+
 {% block content %}
 <h2>Sales List</h2>
 
-<table class="table table-striped">
+<!-- Display Total Revenue -->
+<div class="alert alert-info">
+    <strong>Total Revenue:</strong> {{ total_revenue|floatformat:2|intcomma }} ج.م
+</div>
+
+<!-- Display Category Totals -->
+<h3>Sales Breakdown by Category</h3>
+<ul class="list-group">
+    {% for category_total in category_totals %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <strong>{{ category_total.category_name }}</strong>
+        <span class="badge bg-primary rounded-pill">{{ category_total.total|floatformat:2|intcomma }} ج.م</span>
+    </li>
+    {% endfor %}
+</ul>
+
+<!-- Category Filters -->
+<form method="get" class="mt-4">
+    <div class="mb-3">
+        <label>Filter by Categories:</label><br>
+        <input type="checkbox" name="categories" value="Ostrich" {% if "Ostrich" in selected_categories %}checked{% endif %}>
+        <label>Ostrich</label><br>
+
+        <input type="checkbox" name="categories" value="Chick" {% if "Chick" in selected_categories %}checked{% endif %}>
+        <label>Chick</label><br>
+
+        <input type="checkbox" name="categories" value="Egg" {% if "Egg" in selected_categories %}checked{% endif %}>
+        <label>Egg</label><br>
+    </div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
+
+<!-- Sales Table -->
+<table class="table table-striped mt-4">
     <thead>
         <tr>
             <th>Invoice</th>
             <th>Item</th>
+            <th>Category</th>
             <th>Weight (kg)</th>
-            <th>Price</th>
+            <th>Price (ج.م)</th>
             <th>Sale Date</th>
+            <th>Invoice</th>
         </tr>
     </thead>
     <tbody>
-        {% for sale in ostrich_sales %}
+        {% for sale in page_sales %}
         <tr>
             <td>{{ sale.invoice_number }}</td>
-            <td>{{ sale.ostrich.name }}</td>
-            <td>{{ sale.weight_kg }}</td>
-            <td>${{ sale.price }}</td>
-            <td>{{ sale.sale_date }}</td>
+            <td>{{ sale.item }}</td>
+            <td>{{ sale.category }}</td>
+            <td>{% if sale.weight %}{{ sale.weight }}{% else %}-{% endif %}</td>
+            <td>{{ sale.price|floatformat:2|intcomma }}</td>
+            <td>{{ sale.sale_date|date:"Y-m-d" }}</td>
             <td>
-                <a href="{% url 'generate_invoice' sale.id %}" class="btn btn-primary">Download Invoice</a>
+                {% if sale.category == "Ostrich" %}
+                    <a href="{% url 'generate_ostrich_invoice' sale.id %}" class="btn btn-primary">Download Invoice</a>
+                {% elif sale.category == "Chick" %}
+                    <a href="{% url 'generate_chick_invoice' sale.id %}" class="btn btn-primary">Download Invoice</a>
+                {% elif sale.category == "Egg" %}
+                    <a href="{% url 'generate_egg_invoice' sale.id %}" class="btn btn-primary">Download Invoice</a>
+                {% endif %}
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="5" class="text-center">No sales recorded.</td>
+            <td colspan="7" class="text-center">No sales recorded.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+
+<!-- Pagination Controls -->
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_sales.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page=1">&laquo; First</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_sales.previous_page_number }}">Previous</a></li>
+        {% endif %}
+
+        <li class="page-item active"><span class="page-link">{{ page_sales.number }}</span></li>
+
+        {% if page_sales.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_sales.next_page_number }}">Next</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_sales.paginator.num_pages }}">Last &raquo;</a></li>
+        {% endif %}
+    </ul>
+</nav>
 
 {% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Ostrich List</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Family</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ostrich in ostriches %}
+        <tr>
+            <td>{{ ostrich.name }}</td>
+            <td>{{ ostrich.age }}</td>
+            <td>{{ ostrich.gender }}</td>
+            <td>{{ ostrich.family.Family_name }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">No ostriches found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<div class="pagination">
+    {% if ostriches.has_previous %}
+        <a href="?page=1">First</a>
+        <a href="?page={{ ostriches.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ ostriches.number }} of {{ ostriches.paginator.num_pages }}</span>
+
+    {% if ostriches.has_next %}
+        <a href="?page={{ ostriches.next_page_number }}">Next</a>
+        <a href="?page={{ ostriches.paginator.num_pages }}">Last</a>
+    {% endif %}
+</div>
+
+{% endblock %}
