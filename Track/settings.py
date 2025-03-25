@@ -133,6 +133,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'AIzaSyCIyMZtszCckL8XXhlSRLR0LGH7GLL5tJE')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'api_key') # <-- change api_key with your gemini api key 
 
 
