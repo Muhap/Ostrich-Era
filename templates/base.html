@@ -106,7 +106,18 @@
                     </li>
 
                     <!-- ✅ AI Chat -->
-                    <li class="nav-item"><a class="nav-link" href="#">AI Chat</a></li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="ai_chat_Dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            AI Assistant
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                            <li><a class="dropdown-item" href="{% url 'ai_chat' %}">Ask AI</a></li>
+                            <li><a class="dropdown-item" href="{% url 'generate_feedback' %}">Generate Feedback</a></li>
+                            <li><a class="dropdown-item" href="{% url 'how_to' %}">How to ?</a></li>
+                        </ul>
+                    </li>
+                   
                 </ul>
             </div>
         </div>

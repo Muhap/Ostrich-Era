@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>How To Use The System</h2>
+<p>Ask any question about how to use the system (e.g., "How to add a new egg?").</p>
+
+<form method="get" action="{% url 'how_to' %}">
+    <input type="text" name="question" class="form-control" placeholder="Enter your question..." required>
+    <button type="submit" class="btn btn-primary mt-2">Ask</button>
+</form>
+
+{% if question %}
+<hr>
+<h4>Question:</h4>
+<p><strong>{{ question }}</strong></p>
+
+<h4>Answer:</h4>
+<p>{{ answer|safe }}</p>
+{% endif %}
+
+{% endblock %}

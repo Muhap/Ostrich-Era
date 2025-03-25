@@ -1040,7 +1040,124 @@ def insights(request):
         'chart_type': chart_type
     })
 
+import google.generativeai as genai
+from django.shortcuts import render
+from django.conf import settings
 
+# Configure Gemini API
+genai.configure(api_key=settings.GEMINI_API_KEY)
 
+def ai_chat(request):
+    response_text = ""
+    user_query = ""
 
+    if request.method == "POST":
+        user_query = request.POST.get("user_query", "")
+        if user_query:
+            try:
+                # ✅ Use the latest version of Gemini model
+                model = genai.GenerativeModel("gemini-1.5-pro")  
+                response = model.generate_content(user_query)
+                response_text = response.text  # Extract the AI's response
+            except Exception as e:
+                response_text = f"Error: {str(e)}"
 
+    return render(request, "ai_chat/ai_chat.html", {"user_query": user_query, "response_text": response_text})
+
+import google.generativeai as genai
+from django.shortcuts import render
+from django.conf import settings
+from .models import Ostrich, Chick, Egg, FoodInventory, Sale, Cost
+import markdown
+from io import BytesIO
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+
+# Configure Gemini API
+genai.configure(api_key=settings.GEMINI_API_KEY)
+
+def generate_feedback(request):
+    feedback_text = ""
+    selected_language = request.POST.get("language", "English")
+    # Gather farm data
+    total_ostriches = Ostrich.objects.all()
+    total_chicks = Chick.objects.all()
+    total_eggs = Egg.objects.all()
+    total_food = FoodInventory.objects.first().current_inventory if FoodInventory.objects.exists() else 0
+    total_sales = Sale.objects.all()
+    total_costs = Cost.objects.all()
+    
+    farm_data = f"""
+    Farm Overview:
+    - Ostriches: {total_ostriches}
+    - Chicks: {total_chicks}
+    - Eggs: {total_eggs}
+    - Food Inventory: {total_food} kg
+    - Total Sales: {total_sales}
+    - Total Costs: {total_costs}
+
+    You are an ostrich breeding expert, Generate feedback {selected_language} language on the farm's performance, suggest improvements, and provide recommendations to increase productivity.
+    """
+
+    if request.method == "POST":
+        try:
+            model = genai.GenerativeModel("gemini-1.5-pro")  
+            response = model.generate_content(farm_data)
+            feedback_text = response.text  # Extract AI's response
+            feedback_text = markdown.markdown(response.text)
+        except Exception as e:
+            feedback_text = f"Error: {str(e)}"
+
+    return render(request, "ai_chat/generate_feedback.html", {"feedback_text": feedback_text, "selected_language": selected_language})
+
+import google.generativeai as genai
+from django.shortcuts import render
+from django.conf import settings
+import os
+
+# Configure Gemini API
+genai.configure(api_key=settings.GEMINI_API_KEY)
+
+# Function to load all relevant system files
+def load_system_code():
+    code_files = [
+        "views.py", "models.py", "urls.py", "forms.py",
+        "templates/base.html", "templates/generate_feedback.html",
+        "templates/reports/reports_page.html"
+    ]
+    system_code = ""
+
+    for file in code_files:
+        file_path = os.path.join(settings.BASE_DIR, "ostrich", file)
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                system_code += f"\n### FILE: {file} ###\n" + f.read() + "\n\n"
+    
+    return system_code
+
+# AI-powered Q&A function
+def how_to(request):
+    question = request.GET.get("question", "")
+    answer = ""
+
+    if question:
+        system_code = load_system_code()
+        prompt = f"""
+        You are a Django expert who made this project , helping regular users with a farm management system.
+        Here is the system's source code:
+
+        {system_code}
+
+        given that the user do not have any programming background ,Answer the following question in the simplest form based on this code:
+
+        {question}
+        """
+
+        try:
+            model = genai.GenerativeModel("gemini-1.5-pro")
+            response = model.generate_content(prompt)
+            answer = markdown.markdown(response.text)
+        except Exception as e:
+            answer = f"Error: {str(e)}"
+
+    return render(request, "ai_chat/how_to.html", {"question": question, "answer": answer})

@@ -66,5 +66,7 @@ urlpatterns = [
     path('reports/export/csv/', views.export_report_csv, name='export_report_csv'),
     path('insights/', views.insights, name='insights'),
 
-
-]
+    path('ai_chat',views.ai_chat,name='ai_chat'),
+    path('generate-feedback/', views.generate_feedback, name="generate_feedback"),
+    path("how-to/", views.how_to, name="how_to"),
+        ]

@@ -1,7 +1,5 @@
 venv
 django
 matplotlib
-transformers 
-torch 
-sentencepiece
-llama-cpp-python
+google-generativeai
+markdown

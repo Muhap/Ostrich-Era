@@ -1,22 +1,44 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Track Na3am{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero">
-    <h1>Ostrich-Era Management System!</h1>
-    <p>Explore the features and start your journey today.</p>    
-</section>
+<br><br>
+<div class="overlay"></div>
+<div class="hero-content">
+    <h1 class="display-4 fw-bold" style="text-align: center;">Ostrich-Era Management System</h1>
+    <p class="lead" style="text-align: center;">Explore the features and start your journey today.</p>
+</div>
+<br><br>
 
-<div>
-    <br><br>
-    <h3>Farm Summary :</h3>
-    <br>
-    <h5>{{piches_count}} Piches</h5> <br>
-    <h5>{{ostrich_count}} Ostriches</h5> <br>
-    <h5>{{chick_count}} Chicks</h5> <br>
-    <br>
+<!-- Farm Summary -->
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold">Farm Summary</h3>
+        <p class="text-muted">A quick overview of your farm's current status.</p>
+    </div>
+
+    <div class="row text-center">
+        <div class="col-md-4">
+            <div class="card shadow-sm p-4 rounded">
+                <h5 class="fw-bold"><i class="fas fa-map-marker-alt text-primary"></i> {{ piches_count }} Pitches</h5>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm p-4 rounded">
+                <h5 class="fw-bold"><i class="fas fa-dove text-success"></i> {{ ostrich_count }} Ostriches</h5>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm p-4 rounded">
+                <h5 class="fw-bold"><i class="fas fa-egg text-warning"></i> {{ chick_count }} Chicks</h5>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
