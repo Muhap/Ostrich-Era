@@ -1,3 +1,6 @@
 pip
 venv
 django
+matplotlib
+transformers
+torch

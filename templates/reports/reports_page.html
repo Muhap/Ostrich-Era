@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load humanize %} <!-- For formatting numbers -->
+
+{% block content %}
+<h2>Farm Reports</h2>
+
+<!-- Report Selection Form -->
+<form method="get" class="mb-4">
+    <label for="report_type"><strong>Select Report Type:</strong></label>
+    <select name="report_type" id="report_type" class="form-control">
+        <option value="sales" {% if report_type == "sales" %}selected{% endif %}>Sales Report</option>
+        <option value="ostrich_population" {% if report_type == "ostrich_population" %}selected{% endif %}>Ostrich Population</option>
+        <option value="chicks" {% if report_type == "chicks" %}selected{% endif %}>Chick Report</option>
+        <option value="egg_production" {% if report_type == "egg_production" %}selected{% endif %}>Egg Production</option>
+        <option value="food_inventory" {% if report_type == "food_inventory" %}selected{% endif %}>Food Inventory</option>
+        <option value="costs" {% if report_type == "costs" %}selected{% endif %}>Cost Report</option>
+    </select>
+    <button type="submit" class="btn btn-primary mt-2">Generate Report</button>
+</form>
+
+<!-- Export Button -->
+<a href="{% url 'export_report_csv' %}?report_type={{ report_type }}" class="btn btn-success mb-4">
+    Download CSV Report
+</a>
+
+<!-- Report Display -->
+{% if report_type == "sales" %}
+<h3>Sales Report</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Price (ج.م)</th>
+            <th>Sale Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sale in sales %}
+        <tr>
+            <td>
+                {% if sale.egg %}
+                    {{ sale.egg.egg_code }}
+                {% elif sale.chick %}
+                    {{ sale.chick.name }}
+                {% elif sale.ostrich %}
+                    {{ sale.ostrich.name }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+            
+            <td>{{ sale.get_category_display }}</td>
+            <td>{{ sale.quantity }}</td>
+            <td>{{ sale.total_price|floatformat:2|intcomma }} ج.م</td>
+            <td>{{ sale.sale_date }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No sales data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if report_type == "ostrich_population" %}
+<h3>Ostrich Population Report</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age (Months)</th>
+            <th>Gender</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ostrich in ostriches %}
+        <tr>
+            <td>{{ ostrich.name }}</td>
+            <td>{{ ostrich.age }}</td>
+            <td>{{ ostrich.gender }}</td>
+            <td>{{ ostrich.status }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">No ostrich data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if report_type == "chicks" %}
+<h3>Chick Report</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age (Months)</th>
+            <th>Gender</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for chick in chicks %}
+        <tr>
+            <td>{{ chick.name }}</td>
+            <td>{{ chick.age_in_months }}</td>
+            <td>{{ chick.gender }}</td>
+            <td>{{ chick.status }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="text-center">No chick data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if report_type == "egg_production" %}
+<h3>Egg Production Report</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Egg Code</th>
+            <th>Lay Date</th>
+            <th>Mother</th>
+            <th>Father</th>
+            <th>Fertility Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for egg in eggs %}
+        <tr>
+            <td>{{ egg.egg_code }}</td>
+            <td>{{ egg.lay_date_time }}</td>
+            <td>{{ egg.mother.name|default:"Unknown" }}</td>
+            <td>{{ egg.father.name|default:"Unknown" }}</td>
+            <td>{{ egg.fertile }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No egg production data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if report_type == "food_inventory" %}
+<h3>Food Inventory Report</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Last Updated</th>
+            <th>Current Inventory (kg)</th>
+            <th>Estimated Finish Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for food in food_inventory %}
+        <tr>
+            <td>{{ food.last_updated }}</td>
+            <td>{{ food.current_inventory|floatformat:2|intcomma }} kg</td>
+            <td>{{ food.estimated_finish_date }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3" class="text-center">No food inventory data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if report_type == "costs" %}
+<h3>Cost Report</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Price (ج.م)</th>
+            <th>Category</th>
+            <th>Date Paid</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cost in costs %}
+        <tr>
+            <td>{{ cost.name }}</td>
+            <td>{{ cost.price|floatformat:2|intcomma }}</td>
+            <td>{{ cost.category.name }}</td>
+            <td>{{ cost.date_paid|date:"Y-m-d" }}</td>
+            <td>{{ cost.notes|default:"N/A" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5" class="text-center">No cost data available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% endblock %}

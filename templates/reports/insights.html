@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Insights</h2>
+
+<!-- Form to Select Date Range, KPI, and Chart Type -->
+<form method="get">
+    <label for="start_date">Start Date:</label>
+    <input type="date" name="start_date" value="{{ start_date }}">
+
+    <label for="end_date">End Date:</label>
+    <input type="date" name="end_date" value="{{ end_date }}">
+
+    <label for="time_grouping">Time Grouping:</label>
+    <select name="time_grouping">
+        <option value="daily" {% if time_grouping == 'daily' %}selected{% endif %}>Daily</option>
+        <option value="weekly" {% if time_grouping == 'weekly' %}selected{% endif %}>Weekly</option>
+        <option value="monthly" {% if time_grouping == 'monthly' %}selected{% endif %}>Monthly</option>
+    </select>
+
+    <label for="y_axis_kpi">Select KPI:</label>
+    <select name="y_axis_kpi">
+        {% for key, label in kpi_choices.items %}
+            <option value="{{ key }}" {% if y_axis_kpi == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="chart_type">Chart Type:</label>
+    <select name="chart_type">
+        <option value="line" {% if chart_type == 'line' %}selected{% endif %}>Line Chart</option>
+        <option value="bar" {% if chart_type == 'bar' %}selected{% endif %}>Bar Chart</option>
+        <option value="pie" {% if chart_type == 'pie' %}selected{% endif %}>Pie Chart</option>
+        <option value="scatter" {% if chart_type == 'scatter' %}selected{% endif %}>Scatter Plot</option>
+        <option value="histogram" {% if chart_type == 'histogram' %}selected{% endif %}>Histogram</option>
+    </select>
+
+    <button type="submit">Generate</button>
+</form>
+
+<!-- Display Chart -->
+{% if chart_url %}
+    <h3>Generated Chart</h3>
+    <img src="{{ chart_url }}" alt="Generated Chart">
+    <a href="{{ chart_url }}" download="chart.png" class="btn btn-primary">Download Image</a>
+{% endif %}
+
+{% endblock %}

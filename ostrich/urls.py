@@ -62,7 +62,11 @@ urlpatterns = [
     path('sales/chick/invoice/<int:sale_id>/', views.generate_chick_invoice, name='generate_chick_invoice'),
     path('sales/invoice/<int:sale_id>/', views.generate_ostrich_invoice, name='generate_ostrich_invoice'),
 
+    path('reports/', views.reports_page, name='reports_page'),
+    path('reports/export/csv/', views.export_report_csv, name='export_report_csv'),
+    path('insights/', views.insights, name='insights'),
 
-    path('extract-report/', views.extract_report, name='extract_report'),
+
+
 
 ]

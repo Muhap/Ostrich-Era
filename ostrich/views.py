@@ -848,3 +848,194 @@ def generate_chick_invoice(request, sale_id):
         return HttpResponse(f"Error generating invoice: {e}", status=500)
 
 
+from django.shortcuts import render
+from django.db.models import Sum, Count
+from django.http import HttpResponse
+import csv
+from .models import Ostrich, Chick, Egg, Sale, FoodInventory, Cost
+
+def reports_page(request):
+    report_type = request.GET.get('report_type', 'sales')  # Default to sales report
+    context = {}
+
+    if report_type == 'sales':
+        context['sales'] = Sale.objects.select_related('egg', 'chick', 'ostrich').all().order_by('-sale_date')
+
+    elif report_type == 'ostrich_population':
+        context['ostriches'] = Ostrich.objects.all().order_by('-age')
+
+    elif report_type == 'chicks':
+        context['chicks'] = Chick.objects.all().order_by('-creation_date')
+
+    elif report_type == 'egg_production':
+        context['eggs'] = Egg.objects.all().order_by('-lay_date_time')
+
+    elif report_type == 'food_inventory':
+        context['food_inventory'] = FoodInventory.objects.all()
+
+    elif report_type == 'costs':
+        context['costs'] = Cost.objects.all()
+
+    return render(request, 'reports/reports_page.html', {'report_type': report_type, **context})
+
+def export_report_csv(request):
+    report_type = request.GET.get('report_type', 'sales')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{report_type}_report.csv"'
+    writer = csv.writer(response)
+
+    print(f"Generating report for: {report_type}")  # Debugging output
+
+    if report_type == "sales":
+        writer.writerow(["Item", "Category", "Quantity", "Price", "Sale Date"])
+        sales = Sale.objects.select_related('egg', 'chick', 'ostrich').all()
+        print(f"Found {sales.count()} sales records")  # Debugging output
+
+        for sale in sales:
+            item_name = sale.egg.egg_code if sale.egg else (sale.chick.name if sale.chick else sale.ostrich.name)
+            writer.writerow([item_name, sale.get_category_display(), sale.quantity, sale.total_price, sale.sale_date])
+
+    elif report_type == "ostrich_population":
+        writer.writerow(["Name", "Age", "Gender", "Status"])
+        ostriches = Ostrich.objects.all()
+        print(f"Found {ostriches.count()} ostriches")  # Debugging output
+
+        for ostrich in ostriches:
+            writer.writerow([ostrich.name, ostrich.age, ostrich.gender, ostrich.status])
+
+    elif report_type == "chicks":
+        writer.writerow(["Name", "Age (Months)", "Gender", "Status"])
+        chicks = Chick.objects.all()
+        print(f"Found {chicks.count()} chicks")  # Debugging output
+
+        for chick in chicks:
+            writer.writerow([chick.name, chick.age_in_months, chick.gender, chick.status])
+
+    elif report_type == "egg_production":
+        writer.writerow(["Egg Code", "Lay Date", "Mother", "Father", "Fertility Status"])
+        eggs = Egg.objects.all()
+        print(f"Found {eggs.count()} eggs")  # Debugging output
+
+        for egg in eggs:
+            writer.writerow([
+                egg.egg_code, egg.lay_date_time, 
+                egg.mother.name if egg.mother else "Unknown",
+                egg.father.name if egg.father else "Unknown",
+                egg.fertile
+            ])
+
+    elif report_type == "food_inventory":
+        writer.writerow(["Last Updated", "Current Inventory (kg)", "Estimated Finish Date"])
+        food_inventory = FoodInventory.objects.all()
+        print(f"Found {food_inventory.count()} food records")  # Debugging output
+
+        for food in food_inventory:
+            writer.writerow([food.last_updated, food.current_inventory, food.estimated_finish_date()])
+
+    elif report_type == "costs":
+        writer.writerow(["Name", "Price", "Category", "Date Paid", "Notes"])
+        costs = Cost.objects.all()
+        print(f"Found {costs.count()} costs")  # Debugging output
+
+        for cost in costs:
+            writer.writerow([cost.name, cost.price, cost.category.name, cost.date_paid, cost.notes])
+
+    return response
+
+import matplotlib.pyplot as plt
+import io
+import base64
+import datetime
+from django.shortcuts import render
+from django.db.models import Count, Sum
+from .models import Sale
+
+def insights(request):
+    # Define available KPIs (Y-axis)
+    kpi_choices = {
+        'total_sales': 'Total Sales Amount',
+        'total_ostriches': 'Total Ostriches Sold',
+        'total_chicks': 'Total Chicks Sold',
+        'total_eggs': 'Total Eggs Sold',
+    }
+
+    # Get user-selected KPI
+    y_axis_kpi = request.GET.get('y_axis_kpi', 'total_sales')
+
+    # Get time range from user input (default to last 30 days)
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if not start_date or not end_date:
+        end_date = datetime.date.today()
+        start_date = end_date - datetime.timedelta(days=30)
+    else:
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    # Aggregate data by day, week, or month
+    time_grouping = request.GET.get('time_grouping', 'daily')  # Default: Daily
+
+    if time_grouping == 'daily':
+        date_format = "%%Y-%%m-%%d"  # YYYY-MM-DD (Escape `%` for Django)
+    elif time_grouping == 'weekly':
+        date_format = "%%Y-%%W"  # YYYY-WeekNumber (Escape `%`)
+    elif time_grouping == 'monthly':
+        date_format = "%%Y-%%m"  # YYYY-MM (Escape `%`)
+    else:
+        date_format = "%%Y-%%m-%%d"  # Default to daily
+
+    # Get user-selected chart type (default: Line Chart)
+    chart_type = request.GET.get('chart_type', 'line')
+
+    # Fetch sales data grouped by time
+    sales_data = Sale.objects.filter(sale_date__range=[start_date, end_date]) \
+        .extra(select={'time_period': f"strftime('{date_format}', sale_date)"}) \
+        .values('time_period') \
+        .annotate(
+            total_sales=Sum('total_price'),
+            total_ostriches=Count('ostrich'),
+            total_chicks=Count('chick'),
+            total_eggs=Count('egg')
+        ).order_by('time_period')
+
+    # Extract X and Y data
+    x_values = [entry['time_period'] for entry in sales_data]
+    y_values = [entry[y_axis_kpi] for entry in sales_data]
+
+    # Generate chart based on user selection
+    plt.figure(figsize=(8, 5))
+
+    if chart_type == 'line':
+        plt.plot(x_values, y_values, marker='o', linestyle='-', color='b')
+    elif chart_type == 'bar':
+        plt.bar(x_values, y_values, color='g')
+    elif chart_type == 'pie':
+        plt.pie(y_values, labels=x_values, autopct='%1.1f%%', startangle=90)
+    elif chart_type == 'scatter':
+        plt.scatter(x_values, y_values, color='r')
+    elif chart_type == 'histogram':
+        plt.hist(y_values, bins=10, color='purple', edgecolor='black')
+
+    plt.xlabel("Time")
+    plt.ylabel(kpi_choices[y_axis_kpi])
+    plt.title(f"{kpi_choices[y_axis_kpi]} Over Time")
+
+    # Convert plot to image
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    chart_url = "data:image/png;base64," + base64.b64encode(image_png).decode()
+
+    return render(request, 'reports/insights.html', {
+        'chart_url': chart_url,
+        'y_axis_kpi': y_axis_kpi,
+        'kpi_choices': kpi_choices,
+        'start_date': start_date,
+        'end_date': end_date,
+        'time_grouping': time_grouping,
+        'chart_type': chart_type
+    })
