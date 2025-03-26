@@ -69,7 +69,7 @@ def add_family(request):
         # Create family
         Family.objects.create(Family_name=family_name, pitch=pitch)
         messages.success(request, f"Family '{family_name}' added successfully!")
-        return redirect('family_list.html')
+        return render(request, 'farm_settings/add_family.html', {'pitches': pitches})
 
     return render(request, 'farm_settings/add_family.html', {'pitches': pitches})
 
@@ -675,6 +675,7 @@ def chick_sale_details(request):
         return redirect('chick_sale_review')
 
     return render(request, 'sales/chick_sale_details.html', {'chicks': chicks})
+
 def chick_sale_review(request):
     sale_data = request.session.get('chick_sale_data', [])
     chicks = Chick.objects.filter(id__in=[item['chick_id'] for item in sale_data])

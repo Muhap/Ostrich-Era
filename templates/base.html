@@ -81,6 +81,23 @@
                         </ul>
                     </li>
 
+                    <!-- ✅ costs Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="costsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Costs
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="costDropdown">
+                            <li><a class="dropdown-item" href="{% url 'add_farm_setting_cost' %}">Add Farm Setting Cost</a></li>
+                            <li><a class="dropdown-item" href="{% url 'food_costs' %}">Add Food Cost</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_medical_cost' %}">Add Medical Cost</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_electricity_water_cost' %}">Add Electricity and Water Cost</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_rent_tax_cost' %}">Add Rent and Taxes Cost</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_salary_cost' %}">Add Salary cost</a></li>
+                            <li><a class="dropdown-item" href="{% url 'add_other_cost' %}">Add Other Cost</a></li>
+                            <li><a class="dropdown-item" href="{% url 'cost_list' %}">Cost List</a></li>
+                        </ul>
+                    </li>
+
                     <!-- ✅ Sales Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="salesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

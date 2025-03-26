@@ -1,23 +1,23 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Review Chick Sale</h2>
+<h2>Review Egg Sale</h2>
 
 <table class="table">
     <thead>
         <tr>
-            <th>Chick</th>
+            <th>Egg</th>
             <th>Price (ج.م)</th>
         </tr>
     </thead>
     <tbody>
-        {% for pair in chick_sale_pairs %}
+        {% for pair in egg_sale_pairs %}
         <tr>
-            <td>{{ pair.chick.name }}</td>
+            <td>{{ pair.egg.id }}</td>
             <td>ج.م{{ pair.price }}</td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="2" class="text-center">No chicks available for sale.</td>
+            <td colspan="2" class="text-center">No eggs available for sale.</td>
         </tr>
         {% endfor %}
     </tbody>
