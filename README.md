@@ -67,7 +67,6 @@ pandas
 matplotlib
 seaborn
 reportlab
-llama-cpp-python
 ```
 For a full list, see `requirements.txt`.
 
