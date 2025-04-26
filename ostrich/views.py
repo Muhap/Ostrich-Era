@@ -93,7 +93,7 @@ def add_ostrich(request):
     return render(request, 'farm_settings/add_ostrich.html', {'families': families})
 
 def family_list(request):
-    families = Family.objects.filter(ostriches__status="exists").distinct().order_by('pitch__pitch_number', 'Family_name')
+    families = Family.objects.all().order_by('pitch__pitch_number', 'Family_name')
     paginator = Paginator(families, 10)  # Show 10 families per page
     page_number = request.GET.get('page')
     page_families = paginator.get_page(page_number)
